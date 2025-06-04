@@ -22,8 +22,7 @@ class GitHubManager implements Serializable {
     def getOpenPullRequests() {
         def token = getGitHubToken()
         def response = script.bat(
-            script: """curl -s -H "Authorization: token ${token}" \\
-                        https://api.github.com/repos/${repo}/pulls""",
+            script: "curl -s -H \"Authorization: token ${token}\" https://api.github.com/repos/${repo}/pulls",
             returnStdout: true
         )
         return script.readJSON(text: response)
@@ -31,20 +30,21 @@ class GitHubManager implements Serializable {
 
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
-        script.bat """
-            curl -s -X POST -H "Authorization: token ${token}" \\
-            -d '{ "body": "${message.replaceAll("\"", "\\\\\"")}" }' \\
-            https://api.github.com/repos/${repo}/issues/${prNumber}/comments
-        """
+        def escapedMessage = message.replaceAll('"', '\\\\"')
+        def payload = "{ \"body\": \"${escapedMessage}\" }"
+
+        script.bat(
+            script: "curl -s -X POST -H \"Authorization: token ${token}\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/comments"
+        )
     }
 
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
-        script.bat"""
-            curl -s -X PATCH -H "Authorization: token ${token}" \\
-            -d '{ "state": "closed" }' \\
-            https://api.github.com/repos/${repo}/pulls/${prNumber}
-        """
+        def payload = '{ "state": "closed" }'
+
+        script.bat(
+            script: "curl -s -X PATCH -H \"Authorization: token ${token}\" -d \"${payload}\" https://api.github.com/repos/${repo}/pulls/${prNumber}"
+        )
     }
 
     def deleteBranch(branchName) {
@@ -54,9 +54,10 @@ class GitHubManager implements Serializable {
         }
 
         def token = getGitHubToken()
-        script.bat """
-            curl -s -X DELETE -H "Authorization: token ${token}" \\
-            https://api.github.com/repos/${repo}/git/refs/heads/${branchName}
-        """
+        def url = "https://api.github.com/repos/${repo}/git/refs/heads/${branchName}"
+
+        script.bat(
+            script: "curl -s -X DELETE -H \"Authorization: token ${token}\" ${url}"
+        )
     }
 }
