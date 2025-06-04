@@ -27,21 +27,22 @@ class GitHubManager implements Serializable {
             returnStdout: true
         ).trim()
 
-        script.echo "GitHub API responded with ${response.length()} characters"
+        script.writeFile file: 'github_response.txt', text: response
+        script.echo "Response written to workspace as github_response.txt"
 
-        if (!response || response.startsWith("Not Found") || response.startsWith("<")) {
-            script.error("GitHub API did not return valid JSON. Check repo name or token.")
+        try {
+            def prs = script.readJSON(text: response)
+            script.echo "Open Pull Requests:"
+            prs.each { pr ->
+                script.echo "#${pr.number}: ${pr.title}"
+            }
+            return prs
+        } catch (Exception e) {
+            script.echo "Failed to parse JSON: ${e.message}"
+            script.error("Check workspace/github_response.txt for the raw response")
         }
-
-        def prs = script.readJSON(text: response)
-
-        script.echo "Open Pull Requests:"
-        prs.each { pr ->
-            script.echo "#${pr.number}: ${pr.title}"
-        }
-
-        return prs
     }
+
 
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
