@@ -19,14 +19,31 @@ class GitHubManager implements Serializable {
         return token
     }
 
+    // def getOpenPullRequests() {
+    //     def token = getGitHubToken()
+    //     def response = script.bat(
+    //         script: "curl -s -H \"Authorization: token ${token}\" https://api.github.com/repos/${repo}/pulls",
+    //         returnStdout: true
+    //     )
+    //     return script.readJSON(text: response)
+    // }
+
     def getOpenPullRequests() {
         def token = getGitHubToken()
         def response = script.bat(
             script: "curl -s -H \"Authorization: token ${token}\" https://api.github.com/repos/${repo}/pulls",
             returnStdout: true
-        )
+        ).trim()
+
+        script.echo "GitHub API response:\n${response}"
+
+        if (!response || response.startsWith("Not Found") || response.startsWith("<")) {
+            script.error("GitHub API did not return valid JSON. Check repo name or token.")
+        }
+
         return script.readJSON(text: response)
     }
+
 
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
