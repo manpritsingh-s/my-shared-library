@@ -24,6 +24,8 @@ class GitHubManager implements Serializable {
 
         def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/pulls > github_response.json""")
 
+        echo "Response content: ${response}"
+
         script.writeFile file: 'github_response.txt', text: response
         script.echo "Response written to workspace as github_response.txt"
 
