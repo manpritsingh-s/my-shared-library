@@ -26,7 +26,7 @@ class GitHubManager implements Serializable {
                         https://api.github.com/repos/${repo}/pulls""",
             returnStdout: true
         )
-        return script.readJSON text: response
+        return script.readJSON(text: response)
     }
 
     def commentOnPR(prNumber, message) {
