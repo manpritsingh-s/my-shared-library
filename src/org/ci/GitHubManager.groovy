@@ -21,7 +21,7 @@ class GitHubManager implements Serializable {
 
     def getOpenPullRequests() {
         def token = getGitHubToken()
-        def response = script.sh(
+        def response = script.bash(
             script: """curl -s -H "Authorization: token ${token}" \\
                         https://api.github.com/repos/${repo}/pulls""",
             returnStdout: true
@@ -31,7 +31,7 @@ class GitHubManager implements Serializable {
 
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
-        script.sh """
+        script.bash """
             curl -s -X POST -H "Authorization: token ${token}" \\
             -d '{ "body": "${message.replaceAll("\"", "\\\\\"")}" }' \\
             https://api.github.com/repos/${repo}/issues/${prNumber}/comments
@@ -40,7 +40,7 @@ class GitHubManager implements Serializable {
 
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
-        script.sh """
+        script.bash"""
             curl -s -X PATCH -H "Authorization: token ${token}" \\
             -d '{ "state": "closed" }' \\
             https://api.github.com/repos/${repo}/pulls/${prNumber}
@@ -49,12 +49,12 @@ class GitHubManager implements Serializable {
 
     def deleteBranch(branchName) {
         if (branchName == 'main' || branchName == 'master') {
-            script.echo "⚠️ Not deleting protected branch: ${branchName}"
+            script.echo "Not deleting protected branch: ${branchName}"
             return
         }
 
         def token = getGitHubToken()
-        script.sh """
+        script.bash """
             curl -s -X DELETE -H "Authorization: token ${token}" \\
             https://api.github.com/repos/${repo}/git/refs/heads/${branchName}
         """
