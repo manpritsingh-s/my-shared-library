@@ -25,11 +25,18 @@ class GitHubManager implements Serializable {
         def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/pulls""", returnStdout: true).trim()
         script.echo "------------Response from GitHub API is going to start -------------"
 
-        script.echo "Response content: ${response}"
-        if (!response.startsWith("[") && !response.startsWith("{")) {
-        script.echo "ERROR: Response is not valid JSON123"
-        return []
-        }
+        script.echo "raw response content: ${response}"
+        def jsonStart = response.indexOf('[')
+            if (jsonStart > 0) {
+                response = response.substring(jsonStart)
+            }
+
+            script.echo "Cleaned response content: ${response}"
+
+            if (!response.startsWith("[")) {
+                script.echo "ERROR: Response is not valid JSON"
+                return []
+            }
         script.echo "------------Write File is going to start -------------"
 
         try {
