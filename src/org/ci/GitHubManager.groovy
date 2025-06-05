@@ -37,6 +37,7 @@ class GitHubManager implements Serializable {
             return prs
         } catch (Exception e) {
             script.echo "Failed to parse JSON: ${e.message}"
+            echo "------------Json Field cannot be read -------------"
         }
     }
 
