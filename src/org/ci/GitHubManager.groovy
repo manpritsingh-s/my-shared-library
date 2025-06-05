@@ -42,8 +42,7 @@ class GitHubManager implements Serializable {
             script.echo "------------Json Field cannot be read -------------"
         }
     }
-
-    script.echo "------------Write File is going to end -------------"
+    
     script.echo "#${pr.number}: ${pr.title}"
     script.echo "------------try block got failed -------------"
     script.echo "#${pr.number}: ${pr.title}"
