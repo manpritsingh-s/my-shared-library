@@ -43,7 +43,7 @@ class GitHubManager implements Serializable {
         }
     }
 
-    echo "------------Write File is going to end -------------"
+    script.echo "------------Write File is going to end -------------"
     script.echo "#${pr.number}: ${pr.title}"
     script.echo "------------try block got failed -------------"
     script.echo "#${pr.number}: ${pr.title}"
