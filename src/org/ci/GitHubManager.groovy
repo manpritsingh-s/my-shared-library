@@ -56,7 +56,10 @@ class GitHubManager implements Serializable {
 
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
-        def escapedMessage = message.replaceAll('"', '\\\\"').replaceAll(/(\r\n|\n|\r)/, '\\n')
+        def escapedMessage = message
+            .replaceAll('(["\\\\])', '\\\\$1')
+            .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
+
         def payload = "{ \"body\": \"${escapedMessage}\" }"
 
         script.bat(
