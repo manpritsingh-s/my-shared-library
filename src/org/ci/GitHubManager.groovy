@@ -22,12 +22,13 @@ class GitHubManager implements Serializable {
     def getOpenPullRequests() {
         def token = getGitHubToken()
 
-        def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/pulls > github_response.json""")
+        def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/pulls""", returnStdout: true).trim()
+        script.echo "------------Response from GitHub API is going to start -------------"
 
-        echo "Response content: ${response}"
-        echo "------------Write File is going to start -------------"
+        script.echo "Response content: ${response}"
+        script.echo "------------Write File is going to start -------------"
 
-        script.writeFile file: 'github_response.txt', text: response
+        // script.writeFile file: 'github_response.txt', text: response
 
         try {
             def prs = script.readJSON(text: response)
