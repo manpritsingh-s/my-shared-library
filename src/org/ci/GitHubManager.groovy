@@ -27,7 +27,6 @@ class GitHubManager implements Serializable {
         echo "Response content: ${response}"
 
         script.writeFile file: 'github_response.txt', text: response
-        script.echo "Response written to workspace as github_response.txt"
 
         try {
             def prs = script.readJSON(text: response)
@@ -38,7 +37,6 @@ class GitHubManager implements Serializable {
             return prs
         } catch (Exception e) {
             script.echo "Failed to parse JSON: ${e.message}"
-            script.error("Check workspace/github_response.txt for the raw response")
         }
     }
 

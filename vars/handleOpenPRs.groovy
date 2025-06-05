@@ -16,6 +16,9 @@ def call(String githubRepo, String tokenId = 'github-token') {
 
         github.commentOnPR(prNumber, personalizedMessage)
 
+        echo "Waiting 10 minutes before closing PR #${pr.number}"
+        sleep(time: 10, unit: 'MINUTES')
+
         github.closePullRequest(prNumber)
 
         github.deleteBranch(prBranch)
