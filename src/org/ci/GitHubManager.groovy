@@ -44,7 +44,7 @@ class GitHubManager implements Serializable {
             script.echo "--------------Open Pull Requests:------------------"
             prs.each { pr ->
                 script.echo "#${pr.number}: ${pr.title}"
-                script.echo "------------try block got failed -------------"
+                script.echo "------------executed try block -------------"
             }
             return prs
         } catch (Exception e) {
@@ -56,7 +56,7 @@ class GitHubManager implements Serializable {
 
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
-        def escapedMessage = message.replaceAll('"', '\\\\"')
+        def escapedMessage = message.replaceAll('"', '\\\\"').replsaceAll(/(\r\n|\n|\r)/, '\\n')
         def payload = "{ \"body\": \"${escapedMessage}\" }"
 
         script.bat(
