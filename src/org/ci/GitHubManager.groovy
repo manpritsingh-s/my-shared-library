@@ -23,17 +23,17 @@ class GitHubManager implements Serializable {
         def token = getGitHubToken()
 
         def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/pulls""", returnStdout: true).trim()
-        def splitIndex = response.lastIndexOf('\n')
-        def body = response.substring(0, splitIndex)
-        def status = response.substring(splitIndex + 1)
+        // def splitIndex = response.lastIndexOf('\n')
+        // def body = response.substring(0, splitIndex)
+        // def status = response.substring(splitIndex + 1)
 
-        script.echo "HTTP status: ${status}"
-        script.echo "Response body: ${body}"
+        // script.echo "HTTP status: ${status}"
+        // script.echo "Response body: ${body}"
 
-        if (status != "200") {
-            script.echo "ERROR: GitHub API call failed."
-            return []
-        }
+        // if (status != "200") {
+        //     script.echo "ERROR: GitHub API call failed."
+        //     return []
+        // }
         script.echo "------------Response from GitHub API is going to start -------------"
 
         script.echo "Response content: ${response}"
