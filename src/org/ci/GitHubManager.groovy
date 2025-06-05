@@ -28,7 +28,7 @@ class GitHubManager implements Serializable {
         script.echo "Response content: ${response}"
         script.echo "------------Write File is going to start -------------"
 
-        script.writeFile file: 'github_response.txt', text: response
+        script.writeFile file: 'github_response.json', text: response
 
         try {
             def prs = script.readJSON(text: response)
