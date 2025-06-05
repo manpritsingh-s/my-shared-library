@@ -25,6 +25,7 @@ class GitHubManager implements Serializable {
         def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/pulls > github_response.json""")
 
         echo "Response content: ${response}"
+        script.echo "------------Write File is going to start -------------"
 
         script.writeFile file: 'github_response.txt', text: response
 
@@ -33,11 +34,12 @@ class GitHubManager implements Serializable {
             script.echo "Open Pull Requests:"
             prs.each { pr ->
                 script.echo "#${pr.number}: ${pr.title}"
+                script.echo "------------try block got failed -------------"
             }
             return prs
         } catch (Exception e) {
             script.echo "Failed to parse JSON: ${e.message}"
-            echo "------------Json Field cannot be read -------------"
+            script.echo "------------Json Field cannot be read -------------"
         }
     }
 
