@@ -28,7 +28,7 @@ class GitHubManager implements Serializable {
         script.echo "Response content: ${response}"
         script.echo "------------Write File is going to start -------------"
 
-        // script.writeFile file: 'github_response.txt', text: response
+        script.writeFile file: 'github_response.txt', text: response
 
         try {
             def prs = script.readJSON(text: response)
@@ -39,6 +39,7 @@ class GitHubManager implements Serializable {
             }
             return prs
         } catch (Exception e) {
+            script.echo "------------catch block got started -------------"
             script.echo "Failed to parse JSON: ${e.message}"
             script.echo "------------Json Field cannot be read -------------"
         }
