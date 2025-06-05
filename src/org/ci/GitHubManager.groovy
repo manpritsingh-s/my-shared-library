@@ -25,7 +25,7 @@ class GitHubManager implements Serializable {
         def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/pulls > github_response.json""")
 
         echo "Response content: ${response}"
-        script.echo "------------Write File is going to start -------------"
+        echo "------------Write File is going to start -------------"
 
         script.writeFile file: 'github_response.txt', text: response
 
@@ -43,7 +43,7 @@ class GitHubManager implements Serializable {
         }
     }
 
-
+    echo "------------Start of the Comment PR -------------"
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
         def escapedMessage = message.replaceAll('"', '\\\\"')
