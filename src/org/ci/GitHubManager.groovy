@@ -42,11 +42,7 @@ class GitHubManager implements Serializable {
             script.echo "------------Json Field cannot be read -------------"
         }
     }
-    
-    script.echo "#${pr.number}: ${pr.title}"
-    script.echo "------------try block got failed -------------"
-    script.echo "#${pr.number}: ${pr.title}"
-    script.echo "------------try block got failed -------------"
+
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
         def escapedMessage = message.replaceAll('"', '\\\\"')
