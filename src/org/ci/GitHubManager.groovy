@@ -31,7 +31,7 @@ class GitHubManager implements Serializable {
 
         try {
             def prs = script.readJSON(text: response)
-            script.echo "Open Pull Requests:"
+            script.echo "--------------Open Pull Requests:------------------"
             prs.each { pr ->
                 script.echo "#${pr.number}: ${pr.title}"
                 script.echo "------------try block got failed -------------"
@@ -43,7 +43,11 @@ class GitHubManager implements Serializable {
         }
     }
 
-    echo "------------Start of the Comment PR -------------"
+    echo "------------Write File is going to end -------------"
+    script.echo "#${pr.number}: ${pr.title}"
+    script.echo "------------try block got failed -------------"
+    script.echo "#${pr.number}: ${pr.title}"
+    script.echo "------------try block got failed -------------"
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
         def escapedMessage = message.replaceAll('"', '\\\\"')
