@@ -1,5 +1,7 @@
 package org.ci
 
+import java.text.SimpleDateFormat
+
 class GitHubManager implements Serializable {
     def script
     def repo
@@ -51,17 +53,20 @@ class GitHubManager implements Serializable {
             script.echo "No PRs provided to filter."
             return []
         }
+
         def now = new Date()
         script.echo "Filtering PRs older than ${days} days"
+
         def filtered = prs.findAll { pr ->
             try {
                 if (!pr?.created_at) {
                     script.echo "Skipping item without created_at: ${pr}"
                     return false
                 }
+
                 script.echo "Checking PR #${pr.number} created at ${pr.created_at}"
 
-                def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+                def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
                 sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
                 def dateToCheck = pr.updated_at ?: pr.created_at
                 def updatedAt = sdf.parse(dateToCheck)
@@ -89,17 +94,18 @@ class GitHubManager implements Serializable {
             .replaceAll('(["\\\\])', '\\\\$1')
             .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
         def payload = "{ \"body\": \"${escapedMessage}\" }"
-        
+
         def result = script.bat(
             script: """curl -s -X POST \
                 -H "Authorization: token ${token}" \
                 -H "Accept: application/vnd.github.v3+json" \
                 -d "${payload}" \
                 https://api.github.com/repos/${repo}/issues/${prNumber}/comments""",
-            returnStdout: true).trim()
-        
+            returnStdout: true
+        ).trim()
+
         script.echo "GitHub API response code for comment: ${result}"
-}
+    }
 
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
