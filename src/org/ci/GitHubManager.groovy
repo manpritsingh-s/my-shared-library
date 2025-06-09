@@ -99,12 +99,13 @@ class GitHubManager implements Serializable {
             -H "Authorization: token ${token}" \
             -H "Accept: application/vnd.github.v3+json" \
             -d "${payload}" \
-            https://api.github.com/repos/${repo}/issues/${prNumber}/comments"""
+            https://api.github.com/repos/${repo}/issues/${prNumber}/comments \
+            -w '%{http_code}' -o output.txt"""
         
         script.echo "curl command: ${curlCommand}"
         
         def result = script.bat(
-            script: curlCommand + " -w '%{http_code}' -o output.txt",
+            script: curlCommand,
             returnStdout: true
         ).trim()
         
