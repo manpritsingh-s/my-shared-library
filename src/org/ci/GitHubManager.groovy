@@ -48,26 +48,6 @@ class GitHubManager implements Serializable {
 
     def filterPullRequests(prs, days) {
         def now = new Date()
-        return prs.findAll { pr ->
-            try {
-                if (!pr?.created_at) {
-                    script.echo "Skipping item without created_at: ${pr}"
-                    return false
-                }
-                def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-                sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
-                def createdAt = sdf.parse(pr.created_at)
-                def diff = (now.time - createdAt.time) / (1000 * 60 * 60 * 24)
-                return diff >= days
-                } catch (Exception e) {
-                script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
-                return false
-            }
-        }
-    }
-
-    def filterPullRequests(prs, days) {
-        def now = new Date()
         script.echo "Filtering PRs older than ${days} days"
         return prs.findAll { pr ->
             try {
