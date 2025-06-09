@@ -93,18 +93,23 @@ class GitHubManager implements Serializable {
         def escapedMessage = message
             .replaceAll('(["\\\\])', '\\\\$1')
             .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
-        def payload = "{ \"body\": \"${escapedMessage}\" }"
+        def jsonPayload = script.writeJSON(returnText: true, json: [body: escapedMessage])
         
-        def curlCommand = "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/comments -w \"%{http_code}\" -o output.txt"
+        def curlCommand = """curl -s -X POST ^
+        -H "Authorization: token ${token}" ^
+        -H "Accept: application/vnd.github.v3+json" ^
+        -H "Content-Type: application/json" ^
+        -d "${jsonPayload}" ^
+        "https://api.github.com/repos/${repo}/issues/${prNumber}/comments" """
+    
+        script.echo "Making request to GitHub API..."
+        def response = script.bat(
+            script: curlCommand,
+            returnStdout: true
+        ).trim()
         
-        script.echo "curl command: ${curlCommand}"
-        
-        def result = script.bat(script: curlCommand, returnStdout: true).trim()
-        
-        script.echo "GitHub API response code: ${result}"
-        
-        def responseBody = script.readFile 'output.txt'
-        script.echo "GitHub API response body: ${responseBody}"
+        script.echo "GitHub API Response: ${response}"
+        return response
     }
 
     def closePullRequest(prNumber) {
