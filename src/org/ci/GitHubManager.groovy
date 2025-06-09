@@ -63,7 +63,7 @@ class GitHubManager implements Serializable {
         def escapedMessage = message
             .replaceAll('(["\\\\])', '\\\\$1')
             .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
-        def payload = "{ \"body":\"${escapedMessage}\"}"
+        def payload = "{ \"body\": \"${escapedMessage}\" }"
         script.bat(
             script: "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/comments"
         )
