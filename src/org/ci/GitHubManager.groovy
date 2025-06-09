@@ -104,11 +104,14 @@ class GitHubManager implements Serializable {
         script.echo "curl command: ${curlCommand}"
         
         def result = script.bat(
-            script: curlCommand,
+            script: curlCommand + " -w '%{http_code}' -o output.txt",
             returnStdout: true
         ).trim()
         
-        script.echo "GitHub API response code for comment: ${result}"
+        script.echo "GitHub API response code: ${result}"
+        
+        def responseBody = script.readFile 'output.txt'
+        script.echo "GitHub API response body: ${responseBody}"
     }
 
     def closePullRequest(prNumber) {
