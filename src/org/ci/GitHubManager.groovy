@@ -95,18 +95,10 @@ class GitHubManager implements Serializable {
             .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
         def jsonPayload = script.writeJSON(returnText: true, json: [body: escapedMessage])
         
-        def curlCommand = """curl -s -X POST ^
-        -H "Authorization: token ${token}" ^
-        -H "Accept: application/vnd.github.v3+json" ^
-        -H "Content-Type: application/json" ^
-        -d "${jsonPayload}" ^
-        "https://api.github.com/repos/${repo}/issues/${prNumber}/comments" """
+        def curlCommand = "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -H \"Content-Type: application/json\" -d \"${jsonPayload}\" \"https://api.github.com/repos/${repo}/issues/${prNumber}/comments\""
     
         script.echo "Making request to GitHub API..."
-        def response = script.bat(
-            script: curlCommand,
-            returnStdout: true
-        ).trim()
+        def response = script.bat(script: curlCommand, returnStdout: true).trim()
         
         script.echo "GitHub API Response: ${response}"
         return response
