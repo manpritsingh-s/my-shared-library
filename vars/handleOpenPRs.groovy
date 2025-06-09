@@ -1,28 +1,29 @@
-def call(String githubRepo, String tokenId = 'github-token') {
-    def github = new org.ci.GitHubManager(this, githubRepo, tokenId)
+def getPullRequests(script, githubRepo, tokenId) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    return github.getPullRequests()
+}
 
-    def messageTemplate = libraryResource('pr_notification_template.txt')
+def filterPullRequests(prs, days) {
+    def github = new org.ci.GitHubManager(null, null, null)
+    return github.filterPullRequests(prs, days)
+}
 
-    def prs = github.getOpenPullRequests()
+def labelPullRequest(script, githubRepo, tokenId, prNumber, labels) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    github.labelPullRequest(prNumber, labels)
+}
 
-    prs.each { pr ->
-        def prNumber = pr.number
-        def prAuthor = pr.user.login
-        def prBranch = pr.head.ref
+def commentOnPR(script, githubRepo, tokenId, prNumber, message) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    github.commentOnPR(prNumber, message)
+}
 
-        echo "Processing PR #${prNumber} from ${prAuthor}"
+def closePullRequest(script, githubRepo, tokenId, prNumber) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    github.closePullRequest(prNumber)
+}
 
-        def personalizedMessage = messageTemplate.replace('${author}', prAuthor)
-
-        github.commentOnPR(prNumber, personalizedMessage)
-
-        echo "Waiting 10 minutes before closing PR #${pr.number}"
-        sleep(time: 10, unit: 'MINUTES')
-
-        github.closePullRequest(prNumber)
-
-        github.deleteBranch(prBranch)
-
-        github.commentOnPR(prNumber, "PR #${prNumber} has been closed and branch `${prBranch}` was deleted.")
-    }
+def deleteBranch(script, githubRepo, tokenId, branchName) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    github.deleteBranch(branchName)
 }

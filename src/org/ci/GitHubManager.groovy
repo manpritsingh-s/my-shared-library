@@ -19,39 +19,44 @@ class GitHubManager implements Serializable {
         return token
     }
 
-    def getOpenPullRequests() {
+    def getPullRequests() {
         def token = getGitHubToken()
-
-        def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/pulls""", returnStdout: true).trim()
-        script.echo "------------Response from GitHub API is going to start -------------"
+        def response = script.bat(script: """curl -s -H "Authorization: token ${token}" https://api.github.com/repos/${repo}/issues?state=open&per_page=100""",returnStdout: true).trim()
 
         script.echo "raw response content: ${response}"
         def jsonStart = response.indexOf('[')
-            if (jsonStart > 0) {
-                response = response.substring(jsonStart)
-            }
-
-            script.echo "Cleaned response content: ${response}"
-
-            if (!response.startsWith("[")) {
-                script.echo "ERROR: Response is not valid JSON"
-                return []
-            }
-        script.echo "------------Write File is going to start -------------"
-
+        if (jsonStart > 0) {
+            response = response.substring(jsonStart)
+        }
+        script.echo "Cleaned response content: ${response}"
+        if (!response.startsWith("[")) {
+            script.echo "ERROR: Response is not valid JSON"
+            return []
+        }
         try {
-            def prs = script.readJSON(text: response)
-            script.echo "--------------Open Pull Requests:------------------"
-            prs.each { pr ->
-                script.echo "#${pr.number}: ${pr.title}"
-                script.echo "------------executed try block -------------"
-            }
+            def issues = script.readJSON(text: response)
+            def prs = issues.findAll { it.pull_request }
             return prs
         } catch (Exception e) {
-            script.echo "------------catch block got started -------------"
             script.echo "Failed to parse JSON: ${e.message}"
-            script.echo "------------Json Field cannot be read -------------"
+            return []
         }
+    }
+
+    def filterPullRequests(prs, days) {
+        def now = new Date()
+        return prs.findAll { pr ->
+            def createdAt = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", pr.created_at)
+            def diff = (now.time - createdAt.time) / (1000 * 60 * 60 * 24)
+            diff >= days
+        }
+    }
+
+    def labelPullRequest(prNumber, labels) {
+        def token = getGitHubToken()
+        def payload = script.writeJSON(returnText: true, json: [labels: labels])
+        def payload = payload.replaceAll
+        script.bat(script: "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/labels")
     }
 
     def commentOnPR(prNumber, message) {
@@ -59,20 +64,17 @@ class GitHubManager implements Serializable {
         def escapedMessage = message
             .replaceAll('(["\\\\])', '\\\\$1')
             .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
-
-        def payload = "{ \"body\": \"${escapedMessage}\" }"
-
+        def payload = "{ \"body":\"${escapedMessage}\"}"
         script.bat(
-            script: "curl -s -X POST -H \"Authorization: token ${token}\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/comments"
+            script: "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/comments"
         )
     }
 
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
         def payload = '{ "state": "closed" }'
-
         script.bat(
-            script: "curl -s -X PATCH -H \"Authorization: token ${token}\" -d \"${payload}\" https://api.github.com/repos/${repo}/pulls/${prNumber}"
+            script: "curl -s -X PATCH -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/pulls/${prNumber}"
         )
     }
 
@@ -81,10 +83,8 @@ class GitHubManager implements Serializable {
             script.echo "Not deleting protected branch: ${branchName}"
             return
         }
-
         def token = getGitHubToken()
         def url = "https://api.github.com/repos/${repo}/git/refs/heads/${branchName}"
-
         script.bat(
             script: "curl -s -X DELETE -H \"Authorization: token ${token}\" ${url}"
         )
