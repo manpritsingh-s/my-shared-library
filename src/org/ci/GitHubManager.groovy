@@ -85,7 +85,24 @@ class GitHubManager implements Serializable {
     def labelPullRequest(prNumber, labels) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [labels: labels])
-        script.bat(script: "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/labels")
+        
+        def curlCommand = """curl -s -X POST ^
+            -H "Authorization: token ${token}" ^
+            -H "Accept: application/vnd.github.v3+json" ^
+            -H "Content-Type: application/json" ^
+            -d "${payload}" ^
+            "https://api.github.com/repos/${repo}/issues/${prNumber}/labels" """
+            
+        script.echo "Making request to GitHub API..."
+        script.echo "Payload: ${payload}"
+        
+        def response = script.bat(
+            script: curlCommand,
+            returnStdout: true
+        ).trim()
+        
+        script.echo "GitHub API Response: ${response}"
+        return response
     }
 
     def commentOnPR(prNumber, message) {
@@ -109,14 +126,6 @@ class GitHubManager implements Serializable {
         return response
     }
 
-    // def closePullRequest(prNumber) {
-    //     def token = getGitHubToken()
-    //     def payload = '{ "state": "closed" }'
-    //     script.bat(
-    //         script: "curl -s -X PATCH -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/pulls/${prNumber}"
-    //     )
-    // }
-
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [state: 'closed'])
@@ -134,17 +143,6 @@ class GitHubManager implements Serializable {
         )
     }
 
-    // def deleteBranch(branchName) {
-    //     if (branchName == 'main' || branchName == 'master') {
-    //         script.echo "Not deleting protected branch: ${branchName}"
-    //         return
-    //     }
-    //     def token = getGitHubToken()
-    //     def url = "https://api.github.com/repos/${repo}/git/refs/heads/${branchName}"
-    //     script.bat(
-    //         script: "curl -s -X DELETE -H \"Authorization: token ${token}\" ${url}"
-    //     )
-    // }
     def deleteBranch(branchName) {
         if (branchName == 'main' || branchName == 'master') {
             script.echo "Not deleting protected branch: ${branchName}"
