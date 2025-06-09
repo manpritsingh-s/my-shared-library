@@ -55,7 +55,6 @@ class GitHubManager implements Serializable {
     def labelPullRequest(prNumber, labels) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [labels: labels])
-        def payload = payload.replaceAll
         script.bat(script: "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/labels")
     }
 
