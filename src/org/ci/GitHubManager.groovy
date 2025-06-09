@@ -47,9 +47,13 @@ class GitHubManager implements Serializable {
     }
 
     def filterPullRequests(prs, days) {
-        def now = new Date()
+    if (prs == null) {
+        script.echo "No PRs provided to filter."
+        return []
+    }
+    def now = new Date()
         script.echo "Filtering PRs older than ${days} days"
-        return prs.findAll { pr ->
+        def filtered = prs.findAll { pr ->
             try {
                 if (!pr?.created_at) {
                     script.echo "Skipping item without created_at: ${pr}"
@@ -63,13 +67,13 @@ class GitHubManager implements Serializable {
                 def diff = (now.time - createdAt.time) / (1000 * 60 * 60 * 24)
                 
                 script.echo "PR #${pr.number} is ${diff} days old"
-                return true
-                }
-                catch (Exception e) {
+                return diff >= days
+            } catch (Exception e) {
                 script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
                 return false
             }
         }
+        return filtered ?: []
     }
 
     def labelPullRequest(prNumber, labels) {
