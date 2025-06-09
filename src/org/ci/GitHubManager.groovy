@@ -65,6 +65,11 @@ class GitHubManager implements Serializable {
     // }
 
     def filterPullRequests(prs, days) {
+        if (prs == null) {
+            script.echo "filterPullRequests: prs is null"
+            return []
+        }
+        script.echo "filterPullRequests: returning all PRs for testing"
         return prs
     }
 
