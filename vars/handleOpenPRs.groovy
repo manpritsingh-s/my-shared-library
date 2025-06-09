@@ -3,7 +3,7 @@ def getPullRequests(script, githubRepo, tokenId) {
     return github.getPullRequests()
 }
 
-def filterPullRequests(prs, days) {
+def filterPullRequests(script,prs, days) {
     def github = new org.ci.GitHubManager(script, null, null)
     return github.filterPullRequests(prs, days)
 }
