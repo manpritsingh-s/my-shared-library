@@ -51,14 +51,14 @@ class GitHubManager implements Serializable {
         return prs.findAll { pr ->
             try {
                 if (!pr?.created_at) {
-                    script.echo "Skipping item without created_at: ${pr}"
+                    echo "Skipping item without created_at: ${pr}"
                     return false
                 }
                 def createdAt = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", pr.created_at)
                 def diff = (now.time - createdAt.time) / (1000 * 60 * 60 * 24)
                 return diff >= days
             } catch (Exception e) {
-                script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
+                echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
                 return false
             }
         }
