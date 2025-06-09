@@ -46,31 +46,22 @@ class GitHubManager implements Serializable {
         }
     }
 
-    // def filterPullRequests(prs, days) {
-    //     def now = new Date()
-    //     return prs.findAll { pr ->
-    //         try {
-    //             if (!pr?.created_at) {
-    //                 echo "Skipping item without created_at: ${pr}"
-    //                 return false
-    //             }
-    //             def createdAt = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", pr.created_at)
-    //             def diff = (now.time - createdAt.time) / (1000 * 60 * 60 * 24)
-    //             return diff >= days
-    //         } catch (Exception e) {
-    //             echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
-    //             return false
-    //         }
-    //     }
-    // }
-
     def filterPullRequests(prs, days) {
-        // if (prs == null) {
-        //     script.echo "filterPullRequests: prs is null"
-        //     return []
-        // }
-        // script.echo "filterPullRequests: returning all PRs for testing"
-        return prs
+        def now = new Date()
+        return prs.findAll { pr ->
+            try {
+                if (!pr?.created_at) {
+                    echo "Skipping item without created_at: ${pr}"
+                    return false
+                }
+                def createdAt = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", pr.created_at)
+                def diff = (now.time - createdAt.time) / (1000 * 60 * 60 * 24)
+                return diff >= days
+            } catch (Exception e) {
+                echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
+                return false
+            }
+        }
     }
 
     def labelPullRequest(prNumber, labels) {
@@ -78,17 +69,6 @@ class GitHubManager implements Serializable {
         def payload = script.writeJSON(returnText: true, json: [labels: labels])
         script.bat(script: "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/labels")
     }
-
-    // def commentOnPR(prNumber, message) {
-    //     def token = getGitHubToken()
-    //     def escapedMessage = message
-    //         .replaceAll('(["\\\\])', '\\\\$1')
-    //         .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
-    //     def payload = "{ \"body\": \"${escapedMessage}\" }"
-    //     script.bat(
-    //         script: "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/issues/${prNumber}/comments"
-    //     )
-    // }
 
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
