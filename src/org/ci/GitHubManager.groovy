@@ -84,18 +84,21 @@ class GitHubManager implements Serializable {
     }
 
     def commentOnPR(prNumber, message) {
-    def token = getGitHubToken()
-    def escapedMessage = message
-        .replaceAll('(["\\\\])', '\\\\$1')
-        .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
-    def payload = "{ \"body\": \"${escapedMessage}\" }"
-    
-    def result = script.bat(
-        script: """curl -s -X POST \-H "Authorization: token ${token}" \-H "Accept: application/vnd.github.v3+json" \-d "${payload}" \https://api.github.com/repos/${repo}/issues/${prNumber}/comments""",
-        returnStdout: true
-    ).trim()
-    
-    script.echo "GitHub API response code for comment: ${result}"
+        def token = getGitHubToken()
+        def escapedMessage = message
+            .replaceAll('(["\\\\])', '\\\\$1')
+            .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
+        def payload = "{ \"body\": \"${escapedMessage}\" }"
+        
+        def result = script.bat(
+            script: """curl -s -X POST \
+                -H "Authorization: token ${token}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -d "${payload}" \
+                https://api.github.com/repos/${repo}/issues/${prNumber}/comments""",
+            returnStdout: true).trim()
+        
+        script.echo "GitHub API response code for comment: ${result}"
 }
 
     def closePullRequest(prNumber) {
