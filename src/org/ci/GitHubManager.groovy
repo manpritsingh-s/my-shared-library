@@ -21,8 +21,9 @@ class GitHubManager implements Serializable {
 
     def getPullRequests() {
         def token = getGitHubToken()
-        def response = script.bat(script: """curl -s -H "Authorization: token ${token}"
-        "https://api.github.com/repos/${repo}/issues?state=open&per_page=100" """,returnStdout: true).trim()
+        def response = script.bat(
+            script: """curl -s -H "Authorization: token ${token}""https://api.github.com/repos/${repo}/issues?state=open&per_page=100" """,
+            returnStdout: true).trim()
 
         script.echo "raw response content: ${response}"
         def jsonStart = response.indexOf('[')
