@@ -95,8 +95,13 @@ class GitHubManager implements Serializable {
             .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
         def jsonPayload = script.writeJSON(returnText: true, json: [body: escapedMessage])
         
-        def curlCommand = "curl -s -X POST -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -H \"Content-Type: application/json\" -d \"${jsonPayload}\" \"https://api.github.com/repos/${repo}/issues/${prNumber}/comments\""
-    
+        def curlCommand = """curl -s -X POST ^
+            -H "Authorization: token ${token}" ^
+            -H "Accept: application/vnd.github.v3+json" ^
+            -H "Content-Type: application/json" ^
+            -d ${jsonPayload} ^
+            https://api.github.com/repos/${repo}/issues/${prNumber}/comments"""
+            
         script.echo "Making request to GitHub API..."
         def response = script.bat(script: curlCommand, returnStdout: true).trim()
         
@@ -104,14 +109,42 @@ class GitHubManager implements Serializable {
         return response
     }
 
+    // def closePullRequest(prNumber) {
+    //     def token = getGitHubToken()
+    //     def payload = '{ "state": "closed" }'
+    //     script.bat(
+    //         script: "curl -s -X PATCH -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/pulls/${prNumber}"
+    //     )
+    // }
+
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
-        def payload = '{ "state": "closed" }'
+        def payload = script.writeJSON(returnText: true, json: [state: 'closed'])
+        
+        def curlCommand = """curl -s -X PATCH ^
+            -H "Authorization: token ${token}" ^
+            -H "Accept: application/vnd.github.v3+json" ^
+            -H "Content-Type: application/json" ^
+            -d ${payload} ^
+            https://api.github.com/repos/${repo}/pulls/${prNumber}"""
+            
         script.bat(
-            script: "curl -s -X PATCH -H \"Authorization: token ${token}\" -H \"Accept: application/vnd.github.v3+json\" -d \"${payload}\" https://api.github.com/repos/${repo}/pulls/${prNumber}"
+            script: curlCommand,
+            returnStdout: true
         )
     }
 
+    // def deleteBranch(branchName) {
+    //     if (branchName == 'main' || branchName == 'master') {
+    //         script.echo "Not deleting protected branch: ${branchName}"
+    //         return
+    //     }
+    //     def token = getGitHubToken()
+    //     def url = "https://api.github.com/repos/${repo}/git/refs/heads/${branchName}"
+    //     script.bat(
+    //         script: "curl -s -X DELETE -H \"Authorization: token ${token}\" ${url}"
+    //     )
+    // }
     def deleteBranch(branchName) {
         if (branchName == 'main' || branchName == 'master') {
             script.echo "Not deleting protected branch: ${branchName}"
@@ -119,8 +152,15 @@ class GitHubManager implements Serializable {
         }
         def token = getGitHubToken()
         def url = "https://api.github.com/repos/${repo}/git/refs/heads/${branchName}"
+        
+        def curlCommand = """curl -s -X DELETE ^
+            -H "Authorization: token ${token}" ^
+            -H "Accept: application/vnd.github.v3+json" ^
+            ${url}"""
+            
         script.bat(
-            script: "curl -s -X DELETE -H \"Authorization: token ${token}\" ${url}"
+            script: curlCommand,
+            returnStdout: true
         )
     }
 }
