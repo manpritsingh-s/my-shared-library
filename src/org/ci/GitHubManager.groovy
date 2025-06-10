@@ -134,21 +134,19 @@ class GitHubManager implements Serializable {
 
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
-        def escapedMessage = message
-            .replaceAll('(["\\\\])', '\\\\$1')
-            .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
-        def jsonPayload = script.writeJSON(returnText: true, json: [body: escapedMessage])
-        
+        def jsonPayload = script.writeJSON(returnText: true, json: [body: message])
+        def safePayload = jsonPayload.replace('"', '\\"')
+
         def curlCommand = """curl -L ^
             -H "Accept: application/vnd.github+json" ^
             -H "Authorization: Bearer ${token}" ^
             -H "X-GitHub-Api-Version: 2022-11-28" ^
             https://api.github.com/repos/${repo}/issues/${prNumber}/comments ^
-            -d '${jsonPayload}'"""
-            
+            -d "${safePayload}" """
+
         script.echo "Making request to GitHub API..."
         def response = script.bat(script: curlCommand, returnStdout: true).trim()
-        
+
         script.echo "GitHub API Response: ${response}"
         return response
     }
