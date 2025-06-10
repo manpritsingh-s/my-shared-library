@@ -153,12 +153,6 @@ class GitHubManager implements Serializable {
         return response
     }
 
-    def commentOnPR(prNumber, message){
-        def token = getGitHubToken()
-        def escapedMessage = message.replaceAll('(["\\\])','\\\\$1').replaceAll(/(\r\n|\n|\r)/,'\\\\n')
-        def jsonPayload = script.writeJSON(returnText.)
-    }
-
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [state: 'closed'])
