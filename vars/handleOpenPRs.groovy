@@ -32,3 +32,8 @@ def createLabel(script, githubRepo, tokenId, labelName, color = "d73a4a", descri
     def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
     github.createLabel(labelName, color, description)
 }
+
+def getPullRequestsByLabel(script, githubRepo, tokenId, label) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    return github.getPullRequestsByLabel(label)
+}

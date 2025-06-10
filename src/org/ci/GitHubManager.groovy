@@ -1,5 +1,6 @@
 package org.ci
 
+import org.ci.GitHubHelpers
 import java.text.SimpleDateFormat
 
 class GitHubManager implements Serializable {
@@ -23,29 +24,12 @@ class GitHubManager implements Serializable {
 
     def getPullRequests() {
         def token = getGitHubToken()
-        def response = script.bat(
-            script: """curl -L -s -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${repo}/issues?state=open&labels=${label}&per_page=100" """,
-            returnStdout: true
-        ).trim()
+        return GitHubHelpers.fetchPullRequests(script, repo, token)
+    }
 
-        script.echo "raw response content: ${response}"
-        def jsonStart = response.indexOf('[')
-        if (jsonStart > 0) {
-            response = response.substring(jsonStart)
-        }
-        script.echo "Cleaned response content: ${response}"
-        if (!response.startsWith("[")) {
-            script.echo "ERROR: Response is not valid JSON"
-            return []
-        }
-        try {
-            def issues = script.readJSON(text: response)
-            def prs = issues.findAll { it.pull_request }
-            return prs
-        } catch (Exception e) {
-            script.echo "Failed to parse JSON: ${e.message}"
-            return []
-        }
+    def getPullRequestsByLabel(String label) {
+        def token = getGitHubToken()
+        return GitHubHelpers.fetchPullRequests(script, repo, token, label)
     }
 
     def filterPullRequests(prs, days) {
@@ -85,13 +69,14 @@ class GitHubManager implements Serializable {
     def labelPullRequest(prNumber, labels) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [labels: labels])
+        def safePayload = GitHubHelpers.safeJsonForWindows(payload)
 
         def curlCommand = """curl -L ^
             -H "Accept: application/vnd.github+json" ^
             -H "Authorization: Bearer ${token}" ^
             -H "X-GitHub-Api-Version: 2022-11-28" ^
             https://api.github.com/repos/${repo}/issues/${prNumber}/labels ^
-            -d '${payload}'"""
+            -d "${safePayload}" """
 
         script.echo "Making request to GitHub API to add labels..."
         script.echo "Payload: ${payload}"
@@ -112,8 +97,7 @@ class GitHubManager implements Serializable {
             color: color,
             description: description
         ])
-
-        def safePayload = payload.replace('"', '\\"')
+        def safePayload = GitHubHelpers.safeJsonForWindows(payload)
 
         def curlCommand = """curl -L ^
             -H "Accept: application/vnd.github+json" ^
@@ -137,7 +121,7 @@ class GitHubManager implements Serializable {
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
         def jsonPayload = script.writeJSON(returnText: true, json: [body: message])
-        def safePayload = jsonPayload.replace('"', '\\"')
+        def safePayload = GitHubHelpers.safeJsonForWindows(jsonPayload)
 
         def curlCommand = """curl -L ^
             -H "Accept: application/vnd.github+json" ^
@@ -156,7 +140,7 @@ class GitHubManager implements Serializable {
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [state: 'closed'])
-        def safePayload = payload.replace('"', '\\"')
+        def safePayload = GitHubHelpers.safeJsonForWindows(payload)
 
         def curlCommand = """curl -L ^
             -X PATCH ^
@@ -179,7 +163,7 @@ class GitHubManager implements Serializable {
         }
         def token = getGitHubToken()
         def url = "https://api.github.com/repos/${repo}/git/refs/heads/${branchName}"
-        
+
         def curlCommand = """curl -L ^
             -X DELETE ^
             -H "Accept: application/vnd.github+json" ^
