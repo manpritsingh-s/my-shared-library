@@ -113,12 +113,14 @@ class GitHubManager implements Serializable {
             description: description
         ])
 
+        def safePayload = payload.replace('"', '\\"')
+
         def curlCommand = """curl -L ^
             -H "Accept: application/vnd.github+json" ^
             -H "Authorization: Bearer ${token}" ^
             -H "X-GitHub-Api-Version: 2022-11-28" ^
             https://api.github.com/repos/${repo}/labels ^
-            -d '${payload}'"""
+            -d "${safePayload}" """
 
         script.echo "Creating label '${labelName}' if it does not exist..."
         script.echo "Payload: ${payload}"
