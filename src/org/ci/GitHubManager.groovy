@@ -24,7 +24,7 @@ class GitHubManager implements Serializable {
     def getPullRequests() {
         def token = getGitHubToken()
         def response = script.bat(
-            script: """curl -L -s -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${repo}/issues?state=open&per_page=100" """,
+            script: """curl -L -s -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${repo}/issues?state=open&labels=${label}&per_page=100" """,
             returnStdout: true
         ).trim()
 
