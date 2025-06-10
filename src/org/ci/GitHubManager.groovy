@@ -86,11 +86,10 @@ class GitHubManager implements Serializable {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [labels: labels])
 
-        def curlCommand = """curl -L -X POST ^
+        def curlCommand = """curl -L ^
             -H "Accept: application/vnd.github+json" ^
             -H "Authorization: Bearer ${token}" ^
             -H "X-GitHub-Api-Version: 2022-11-28" ^
-            -H "Content-Type: application/json" ^
             https://api.github.com/repos/${repo}/issues/${prNumber}/labels ^
             -d '${payload}'"""
 
