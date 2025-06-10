@@ -24,7 +24,7 @@ class GitHubManager implements Serializable {
     def getPullRequests() {
         def token = getGitHubToken()
         def response = script.bat(
-            script: """curl -s -H "Authorization: token ${token}" "https://api.github.com/repos/${repo}/issues?state=open&per_page=100" """,
+            script: """curl -L -s -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${repo}/issues?state=open&per_page=100" """,
             returnStdout: true
         ).trim()
 
@@ -93,7 +93,34 @@ class GitHubManager implements Serializable {
             https://api.github.com/repos/${repo}/issues/${prNumber}/labels ^
             -d '${payload}'"""
 
-        script.echo "Making request to GitHub API..."
+        script.echo "Making request to GitHub API to add labels..."
+        script.echo "Payload: ${payload}"
+
+        def response = script.bat(
+            script: curlCommand,
+            returnStdout: true
+        ).trim()
+
+        script.echo "GitHub API Response: ${response}"
+        return response
+    }
+
+    def createLabel(labelName, color = "red", description = "") {
+        def token = getGitHubToken()
+        def payload = script.writeJSON(returnText: true, json: [
+            name: labelName,
+            color: color,
+            description: description
+        ])
+
+        def curlCommand = """curl -L ^
+            -H "Accept: application/vnd.github+json" ^
+            -H "Authorization: Bearer ${token}" ^
+            -H "X-GitHub-Api-Version: 2022-11-28" ^
+            https://api.github.com/repos/${repo}/labels ^
+            -d '${payload}'"""
+
+        script.echo "Creating label '${labelName}' if it does not exist..."
         script.echo "Payload: ${payload}"
 
         def response = script.bat(
@@ -112,12 +139,12 @@ class GitHubManager implements Serializable {
             .replaceAll(/(\r\n|\n|\r)/, '\\\\n')
         def jsonPayload = script.writeJSON(returnText: true, json: [body: escapedMessage])
         
-        def curlCommand = """curl -s -X POST ^
-            -H "Authorization: token ${token}" ^
-            -H "Accept: application/vnd.github.v3+json" ^
-            -H "Content-Type: application/json" ^
-            -d ${jsonPayload} ^
-            https://api.github.com/repos/${repo}/issues/${prNumber}/comments"""
+        def curlCommand = """curl -L ^
+            -H "Accept: application/vnd.github+json" ^
+            -H "Authorization: Bearer ${token}" ^
+            -H "X-GitHub-Api-Version: 2022-11-28" ^
+            https://api.github.com/repos/${repo}/issues/${prNumber}/comments ^
+            -d '${jsonPayload}'"""
             
         script.echo "Making request to GitHub API..."
         def response = script.bat(script: curlCommand, returnStdout: true).trim()
@@ -130,12 +157,13 @@ class GitHubManager implements Serializable {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [state: 'closed'])
         
-        def curlCommand = """curl -s -X PATCH ^
-            -H "Authorization: token ${token}" ^
-            -H "Accept: application/vnd.github.v3+json" ^
-            -H "Content-Type: application/json" ^
-            -d ${payload} ^
-            https://api.github.com/repos/${repo}/pulls/${prNumber}"""
+        def curlCommand = """curl -L ^
+            -X PATCH ^
+            -H "Accept: application/vnd.github+json" ^
+            -H "Authorization: Bearer ${token}" ^
+            -H "X-GitHub-Api-Version: 2022-11-28" ^
+            https://api.github.com/repos/${repo}/pulls/${prNumber} ^
+            -d '${payload}'"""
             
         script.bat(
             script: curlCommand,
@@ -151,11 +179,13 @@ class GitHubManager implements Serializable {
         def token = getGitHubToken()
         def url = "https://api.github.com/repos/${repo}/git/refs/heads/${branchName}"
         
-        def curlCommand = """curl -s -X DELETE ^
-            -H "Authorization: token ${token}" ^
-            -H "Accept: application/vnd.github.v3+json" ^
+        def curlCommand = """curl -L ^
+            -X DELETE ^
+            -H "Accept: application/vnd.github+json" ^
+            -H "Authorization: Bearer ${token}" ^
+            -H "X-GitHub-Api-Version: 2022-11-28" ^
             ${url}"""
-            
+
         script.bat(
             script: curlCommand,
             returnStdout: true
