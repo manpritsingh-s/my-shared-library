@@ -85,22 +85,23 @@ class GitHubManager implements Serializable {
     def labelPullRequest(prNumber, labels) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [labels: labels])
-        
-        def curlCommand = """curl -s -X POST ^
-            -H "Authorization: token ${token}" ^
-            -H "Accept: application/vnd.github.v3+json" ^
+
+        def curlCommand = """curl -L -X POST ^
+            -H "Accept: application/vnd.github+json" ^
+            -H "Authorization: Bearer ${token}" ^
+            -H "X-GitHub-Api-Version: 2022-11-28" ^
             -H "Content-Type: application/json" ^
-            -d "${payload}" ^
-            "https://api.github.com/repos/${repo}/issues/${prNumber}/labels" """
-            
+            https://api.github.com/repos/${repo}/issues/${prNumber}/labels ^
+            -d '${payload}'"""
+
         script.echo "Making request to GitHub API..."
         script.echo "Payload: ${payload}"
-        
+
         def response = script.bat(
             script: curlCommand,
             returnStdout: true
         ).trim()
-        
+
         script.echo "GitHub API Response: ${response}"
         return response
     }
