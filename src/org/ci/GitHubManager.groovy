@@ -156,15 +156,16 @@ class GitHubManager implements Serializable {
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [state: 'closed'])
-        
+        def safePayload = payload.replace('"', '\\"')
+
         def curlCommand = """curl -L ^
             -X PATCH ^
             -H "Accept: application/vnd.github+json" ^
             -H "Authorization: Bearer ${token}" ^
             -H "X-GitHub-Api-Version: 2022-11-28" ^
             https://api.github.com/repos/${repo}/pulls/${prNumber} ^
-            -d '${payload}'"""
-            
+            -d "${safePayload}" """
+
         script.bat(
             script: curlCommand,
             returnStdout: true
