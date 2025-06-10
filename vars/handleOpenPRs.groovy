@@ -27,3 +27,8 @@ def deleteBranch(script, githubRepo, tokenId, branchName) {
     def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
     github.deleteBranch(branchName)
 }
+
+def createLabel(script, githubRepo, tokenId, labelName, color = "d73a4a", description = "") {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    github.createLabel(labelName, color, description)
+}
