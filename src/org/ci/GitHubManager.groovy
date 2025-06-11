@@ -165,7 +165,7 @@ class GitHubManager implements Serializable {
         def token = github.getGitHubToken()
         def encodedBranch = java.net.URLEncoder.encode(branchName, "UTF-8")
         def url = "https://api.github.com/repos/${githubRepo}/git/refs/heads/${encodedBranch}"
-        def curlCommand = """curl -L -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${token}" "${url}" """
+        def curlCommand = """curl -v -L -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${token}" "${url}" """
         script.echo "Deleting branch with command: ${curlCommand}"
         def response = script.bat(
             script: curlCommand,

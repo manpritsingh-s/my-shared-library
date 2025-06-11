@@ -47,7 +47,10 @@ class GitHubHelpers implements Serializable {
             return null
         }
         try {
-            return script.readJSON(text: response)
+            def prDetails = script.readJSON(text: response)
+            script.echo "PR head: ${prDetails?.head}"
+            script.echo "PR head.ref: ${prDetails?.head?.ref}"
+            return prDetails
         } catch (Exception e) {
             script.echo "Failed to parse PR details JSON: ${e.message}"
             return null
