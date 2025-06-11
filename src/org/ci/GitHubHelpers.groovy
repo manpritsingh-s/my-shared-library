@@ -44,6 +44,7 @@ class GitHubHelpers implements Serializable {
         return script.readJSON(text: response)
     }
 
+
     static def safeJsonForWindows(payload) {
         return payload.replace('"', '\\"')
     }

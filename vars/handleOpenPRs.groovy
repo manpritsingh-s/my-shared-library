@@ -37,3 +37,10 @@ def getPullRequestsByLabel(script, githubRepo, tokenId, label) {
     def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
     return github.getPullRequestsByLabel(label)
 }
+
+def getPullRequestBranchName(script, githubRepo, tokenId, prNumber) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    def token = github.getGitHubToken()
+    def prDetails = org.ci.GitHubHelpers.fetchPullRequestDetails(script, githubRepo, token, prNumber)
+    return prDetails?.head?.ref
+}
