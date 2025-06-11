@@ -2,6 +2,15 @@ package org.ci
 
 class GitHubHelpers implements Serializable {
 
+    /**
+     * Fetches open pull requests from a GitHub repository.
+     *
+     * @param script, The Jenkins pipeline script context.
+     * @param repo, The GitHub repository in the format owner/repo.
+     * @param token, The GitHub API token.
+     * @param label, Label to filter pull requests.
+     * @return List of pull requests.
+     */
     static def fetchPullRequests(script, repo, token, label = null) {
         def url = "https://api.github.com/repos/${repo}/issues?state=open&per_page=100"
         if (label) {
@@ -14,6 +23,13 @@ class GitHubHelpers implements Serializable {
         return extractPullRequestsFromApiResponse(script, response)
     }
 
+    /**
+     * Extracts pull requests from the API response.
+     *
+     * @param script, The Jenkins pipeline script context.
+     * @param response, The raw JSON response string from GitHub API.
+     * @return List of pull requests extracted from the response.
+     */
     static def extractPullRequestsFromApiResponse(script, response) {
         script.echo "raw response content: ${response}"
         def jsonStart = response.indexOf('[')
@@ -35,6 +51,15 @@ class GitHubHelpers implements Serializable {
         }
     }
 
+    /**
+    * Fetches details for a specific pull request from the GitHub API.
+    *
+    * @param script Jenkins pipeline script context.
+    * @param repo GitHub repository in owner/repo format.
+    * @param token GitHub API token.
+    * @param prNumber Pull request number.
+    * @return Pull request details as a map, or null if not found/invalid.
+    */
     static def fetchPullRequestDetails(script, repo, token, prNumber) {
         def url = "https://api.github.com/repos/${repo}/pulls/${prNumber}"
         def response = script.bat(
@@ -62,6 +87,12 @@ class GitHubHelpers implements Serializable {
         }
     }
 
+    /**
+    * Escapes double quotes in a JSON payload for Windows command line compatibility.
+    *
+    * @param payload JSON string to escape.
+    * @return Escaped JSON string.
+     */
     static def safeJsonForWindows(payload) {
         return payload.replace('"', '\\"')
     }

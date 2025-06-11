@@ -14,6 +14,11 @@ class GitHubManager implements Serializable {
         this.tokenId = tokenId
     }
 
+    /**
+     * Retrieve the GitHub token from Jenkins credentials.
+     *
+     * @return The GitHub token as a string.
+     */
     def getGitHubToken() {
         def token = null
         script.withCredentials([script.string(credentialsId: tokenId, variable: 'GITHUB_TOKEN')]) {
@@ -22,16 +27,34 @@ class GitHubManager implements Serializable {
         return token
     }
 
+    /**
+     * Fetch all open pull requests from the GitHub repository.
+     *
+     * @return List of pull requests.
+     */
     def getPullRequests() {
         def token = getGitHubToken()
         return GitHubHelpers.fetchPullRequests(script, repo, token)
     }
 
+    /**
+     * Fetch pull requests by label from the GitHub repository.
+     *
+     * @param label, The label to filter pull requests by.
+     * @return List of pull requests with the specified label.
+     */
     def getPullRequestsByLabel(String label) {
         def token = getGitHubToken()
         return GitHubHelpers.fetchPullRequests(script, repo, token, label)
     }
 
+    /**
+    * Filters pull requests older than the specified number of days.
+    *
+    * @param prs, List of pull requests.
+    * @param days, Number of days to filter by.
+    * @return List of filtered pull requests.
+    */
     def filterPullRequests(prs, days) {
         if (prs == null) {
             script.echo "No PRs provided to filter."
@@ -66,6 +89,13 @@ class GitHubManager implements Serializable {
         return filtered ?: []
     }
 
+    /*
+    * Add labels to a pull request.
+    *
+    * @param prNumber, Pull Request number.
+    * @param labels, List of labels to add to the pull request.
+    * @return The response from the GitHub API.
+    */
     def labelPullRequest(prNumber, labels) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [labels: labels])
@@ -90,6 +120,14 @@ class GitHubManager implements Serializable {
         return response
     }
 
+    /**
+     * Create a label in the GitHub repository if it does not exist.
+     *
+     * @param labelName, The name of the label to create.
+     * @param color, The color of the label.
+     * @param description, The description of the label.
+     * @return The response from the GitHub API.
+     */
     def createLabel(labelName, color = "red", description = "") {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [
@@ -118,6 +156,13 @@ class GitHubManager implements Serializable {
         return response
     }
 
+    /**
+     * Add a comment to a pull request.
+     *
+     * @param prNumber, Pull Request number.
+     * @param message, The comment message to add to the pull request.
+     * @return The response from the GitHub API.
+     */
     def commentOnPR(prNumber, message) {
         def token = getGitHubToken()
         def jsonPayload = script.writeJSON(returnText: true, json: [body: message])
@@ -137,6 +182,12 @@ class GitHubManager implements Serializable {
         return response
     }
 
+    /**
+     * Close a pull request.
+     *
+     * @param prNumber, Pull Request number.
+     * @return The response from the GitHub API.
+     */
     def closePullRequest(prNumber) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [state: 'closed'])
@@ -156,6 +207,12 @@ class GitHubManager implements Serializable {
         )
     }
 
+    /**
+     * Delete a branch from the GitHub repository.
+     *
+     * @param branchName, The name of the branch to delete.
+     * @return The response from the GitHub API.
+     */
     def deleteBranch(branchName) {
         if (branchName == 'main' || branchName == 'master') {
             script.echo "Not deleting protected branch: ${branchName}"
