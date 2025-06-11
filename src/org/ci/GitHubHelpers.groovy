@@ -11,10 +11,10 @@ class GitHubHelpers implements Serializable {
             script: """curl -L -s -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "${url}" """,
             returnStdout: true
         ).trim()
-        return parseApiResponse(script, response)
+        return extractPullRequestsFromApiResponse(script, response)
     }
 
-    static def parseApiResponse(script, response) {
+    static def extractPullRequestsFromApiResponse(script, response) {
         script.echo "raw response content: ${response}"
         def jsonStart = response.indexOf('[')
         if (jsonStart > 0) {
@@ -33,6 +33,15 @@ class GitHubHelpers implements Serializable {
             script.echo "Failed to parse JSON: ${e.message}"
             return []
         }
+    }
+
+    static def fetchPullRequestDetails(script, repo, token, prNumber) {
+        def url = "https://api.github.com/repos/${repo}/pulls/${prNumber}"
+        def response = script.bat(
+            script: """curl -L -s -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" "${url}" """,
+            returnStdout: true
+        ).trim()
+        return script.readJSON(text: response)
     }
 
     static def safeJsonForWindows(payload) {
