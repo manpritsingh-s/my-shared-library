@@ -41,7 +41,17 @@ class GitHubHelpers implements Serializable {
             script: """curl -L -s -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" "${url}" """,
             returnStdout: true
         ).trim()
-        return script.readJSON(text: response)
+        script.echo "Raw PR details response: ${response}"
+        if (!response?.startsWith("{")) {
+            script.echo "ERROR: Response is not valid JSON: ${response}"
+            return null
+        }
+        try {
+            return script.readJSON(text: response)
+        } catch (Exception e) {
+            script.echo "Failed to parse PR details JSON: ${e.message}"
+            return null
+        }
     }
 
 
