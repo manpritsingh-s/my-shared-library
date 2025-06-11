@@ -41,7 +41,12 @@ class GitHubHelpers implements Serializable {
             script: """curl -L -s -H "Authorization: Bearer ${token}" -H "Accept: application/vnd.github+json" "${url}" """,
             returnStdout: true
         ).trim()
-        script.echo "Raw PR details response: ${response}"
+
+        def jsonStart = response.indexOf('{')
+        if (jsonStart > 0) {
+            response = response.substring(jsonStart)
+        }
+        script.echo "Cleaned PR details response: ${response}"
         if (!response?.startsWith("{")) {
             script.echo "ERROR: Response is not valid JSON: ${response}"
             return null
@@ -56,7 +61,6 @@ class GitHubHelpers implements Serializable {
             return null
         }
     }
-
 
     static def safeJsonForWindows(payload) {
         return payload.replace('"', '\\"')
