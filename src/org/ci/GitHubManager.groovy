@@ -156,24 +156,22 @@ class GitHubManager implements Serializable {
         )
     }
 
-    def deleteBranch(branchName) {
+    def deleteBranch(script,githubRepo, tokenId, branchName) {
         if (branchName == 'main' || branchName == 'master') {
             script.echo "Not deleting protected branch: ${branchName}"
             return
         }
-        def token = getGitHubToken()
-        def url = "https://api.github.com/repos/${repo}/git/refs/heads/${branchName}"
-
-        def curlCommand = """curl -L ^
-            -X DELETE ^
-            -H "Accept: application/vnd.github+json" ^
-            -H "Authorization: Bearer ${token}" ^
-            -H "X-GitHub-Api-Version: 2022-11-28" ^
-            ${url}"""
-
-        script.bat(
+        def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+        def token = github.getGitHubToken()
+        def encodedBranch = java.net.URLEncoder.encode(branchName, "UTF-8")
+        def url = "https://api.github.com/repos/${githubRepo}/git/refs/heads/${encodedBranch}"
+        def curlCommand = """curl -L -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${token}" "${url}" """
+        script.echo "Deleting branch with command: ${curlCommand}"
+        def response = script.bat(
             script: curlCommand,
             returnStdout: true
-        )
+        ).trim()
+        script.echo "Delete branch API response: ${response}"
+        return response
     }
 }
