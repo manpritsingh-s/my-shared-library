@@ -73,7 +73,7 @@ class GitHubManager implements Serializable {
         }
 
         def now = new Date()
-        script.echo "Filtering PRs older than ${days} days"
+        script.echo "Filtering PRs older than ${hours} hours"
 
         def filtered = prs.findAll { pr ->
             try {
@@ -88,7 +88,7 @@ class GitHubManager implements Serializable {
                 sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
                 def dateToCheck = pr.updated_at ?: pr.created_at
                 def updatedAt = sdf.parse(dateToCheck)
-                def diff = (now.time - updatedAt.time) / (1000 * 60 * 60)
+                def diffHours = (now.time - updatedAt.time) / (1000 * 60 * 60)
 
                 script.echo "PR #${pr.number} is ${diff} days old"
                 return diffHours >= hours
