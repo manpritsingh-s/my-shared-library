@@ -81,10 +81,10 @@ class GitHubManager implements Serializable {
 
                 script.echo "PR #${pr.number} is ${diff} days old"
                 return diff >= days
-            } catch (Exception e) {
-                script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
-                return false
-            }
+                } catch (Exception e) {
+                    script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
+                    return false
+                }
         }
         return filtered ?: []
     }
