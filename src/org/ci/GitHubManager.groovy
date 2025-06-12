@@ -263,25 +263,42 @@ class GitHubManager implements Serializable {
      * @param bufferHours Buffer period in hours to wait after the last warning comment.
      * @return true if PR was closed, false otherwise.
      */
-    def closePROnBuffer(prNumber, marker, bufferHours) {
-        def token = getGitHubToken()
-        def comments = GitHubHelpers.fetchPRComments(script, repo, token, prNumber)
-        def latest = GitHubHelpers.findLatestWarningComment(comments, marker)
-        if (!latest) {
-            script.echo "No warning comment found for PR #${prNumber}. Not closing."
-            return false
-        }
-        def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
-        def lastWarning = sdf.parse(latest.created_at)
-        def now = new Date()
-        def diffHours = (now.time - lastWarning.time) / (1000 * 60 * 60)
-        if (diffHours < bufferHours) {
-            script.echo "Buffer period not elapsed for PR #${prNumber}: ${diffHours}h < ${bufferHours}h"
-            return false
-        }
-        closePullRequest(prNumber)
-        script.echo "Closed PR #${prNumber} after buffer period."
+    // def closePROnBuffer(prNumber, marker, bufferHours) {
+    //     def token = getGitHubToken()
+    //     def comments = GitHubHelpers.fetchPRComments(script, repo, token, prNumber)
+    //     def latest = GitHubHelpers.findLatestWarningComment(comments, marker)
+    //     if (!latest) {
+    //         script.echo "No warning comment found for PR #${prNumber}. Not closing."
+    //         return false
+    //     }
+    //     def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    //     sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+    //     def lastWarning = sdf.parse(latest.created_at)
+    //     def now = new Date()
+    //     def diffHours = (now.time - lastWarning.time) / (1000 * 60 * 60)
+    //     if (diffHours < bufferHours) {
+    //         script.echo "Buffer period not elapsed for PR #${prNumber}: ${diffHours}h < ${bufferHours}h"
+    //         return false
+    //     }
+    //     closePullRequest(prNumber)
+    //     script.echo "Closed PR #${prNumber} after buffer period."
+    //     return true
+    // }
+
+
+    def closePROnBuffer(script, repo, tokenId, prNumber, warningMarker, bufferMinutes) {
+    def lastWarningTime = getLatestWarningCommentTimestamp(script, repo, tokenId, prNumber, warningMarker)
+    if (!lastWarningTime) {
+        script.echo "No warning comment found, not closing PR."
+        return false
+    }
+    def now = new Date()
+    def diffMinutes = (now.time - lastWarningTime.time) / (1000 * 60)
+    if (diffMinutes >= bufferMinutes) {
+        closePullRequest(script, repo, tokenId, prNumber)
         return true
     }
+    script.echo "Buffer period not elapsed: ${diffMinutes} < ${bufferMinutes} minutes"
+    return false
+}
 }
