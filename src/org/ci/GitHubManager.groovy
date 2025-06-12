@@ -88,10 +88,10 @@ class GitHubManager implements Serializable {
                 sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
                 def dateToCheck = pr.updated_at ?: pr.created_at
                 def updatedAt = sdf.parse(dateToCheck)
-                def diff = (now.time - updatedAt.time) / (1000 * 60 * 60 * 24)
+                def diff = (now.time - updatedAt.time) / (1000 * 60 * 60)
 
                 script.echo "PR #${pr.number} is ${diff} days old"
-                return diff >= days
+                return diffHours >= hours
                 } catch (Exception e) {
                     script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
                     return false
