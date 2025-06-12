@@ -49,6 +49,17 @@ class GitHubManager implements Serializable {
     }
 
     /**
+     * Fetch all comments for a pull request.
+     *
+     * @param prNumber Pull Request number.
+     * @return List of comments (each as a map), or empty list if none/error.
+     */
+    def getPRComments(prNumber) {
+        def token = getGitHubToken()
+        return GitHubHelpers.fetchPRComments(script, repo, token, prNumber)
+    }
+
+    /**
     * Filters pull requests older than the specified number of days.
     *
     * @param prs, List of pull requests.
@@ -285,20 +296,46 @@ class GitHubManager implements Serializable {
     //     return true
     // }
 
-
-    def closePROnBuffer(script, repo, tokenId, prNumber, warningMarker, bufferMinutes) {
-    def lastWarningTime = getLatestWarningCommentTimestamp(script, repo, tokenId, prNumber, warningMarker)
-    if (!lastWarningTime) {
-        script.echo "No warning comment found, not closing PR."
+    /**
+     * Closes a PR only if the buffer period has elapsed since the last warning comment.
+     *
+     * @param prNumber Pull Request number.
+     * @param warningMarker Unique marker string to identify warning comments.
+     * @param bufferMinutes Buffer period in minutes to wait after the last warning comment.
+     * @return true if PR was closed, false otherwise.
+     */
+    def closePROnBuffer(prNumber, warningMarker, bufferMinutes) {
+        def lastWarningTime = getLatestWarningCommentTimestamp(prNumber, warningMarker)
+        if (!lastWarningTime) {
+            script.echo "No warning comment found, not closing PR."
+            return false
+        }
+        def now = new Date()
+        def diffMinutes = (now.time - lastWarningTime.time) / (1000 * 60)
+        script.echo "Buffer diff: ${diffMinutes} minutes (buffer: ${bufferMinutes})"
+        if (diffMinutes >= bufferMinutes) {
+            script.echo "Buffer elapsed, closing PR #${prNumber}"
+            closePullRequest(prNumber)
+            return true
+        }
+        script.echo "Buffer period not elapsed: ${diffMinutes} < ${bufferMinutes} minutes"
         return false
     }
-    def now = new Date()
-    def diffMinutes = (now.time - lastWarningTime.time) / (1000 * 60)
-    if (diffMinutes >= bufferMinutes) {
-        closePullRequest(script, repo, tokenId, prNumber)
-        return true
+
+    /**
+     * Get the timestamp of the latest warning comment.
+     *
+     * @param prNumber Pull Request number.
+     * @param warningMarker Unique marker string to identify warning comments.
+     * @return Date of latest warning comment, or null.
+     */
+    def getLatestWarningCommentTimestamp(prNumber, warningMarker) {
+        def comments = getPRComments(prNumber)
+        def warningComments = comments.findAll { it.body?.contains(warningMarker) }
+        if (!warningComments) return null
+        def latest = warningComments.max { it.created_at }
+        def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+        return sdf.parse(latest.created_at)
     }
-    script.echo "Buffer period not elapsed: ${diffMinutes} < ${bufferMinutes} minutes"
-    return false
-}
 }
