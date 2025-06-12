@@ -127,3 +127,35 @@ def getPullRequestBranchName(script, githubRepo, tokenId, prNumber) {
     def prDetails = org.ci.GitHubHelpers.fetchPullRequestDetails(script, githubRepo, token, prNumber)
     return prDetails?.head?.ref
 }
+
+/**
+* Post a warning comment to a PR only if one does not already exist (prevents duplicates).
+*
+* @param script Jenkins pipeline script context.
+* @param githubRepo GitHub repository in owner/repo format.
+* @param tokenId Jenkins credentials ID for GitHub token.
+* @param prNumber Pull Request number.
+* @param message The warning message (should include a unique marker).
+* @param marker Unique marker string to identify warning comments.
+* @return The timestamp of the latest warning comment (if any), or null.
+*/
+def postWarningIfNeeded(script, githubRepo, tokenId, prNumber, message, marker) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    return github.postWarningIfNeeded(prNumber, message, marker)
+}
+
+/**
+* Close a PR only if the buffer period has elapsed since the last warning comment.
+*
+* @param script Jenkins pipeline script context.
+* @param githubRepo GitHub repository in owner/repo format.
+* @param tokenId Jenkins credentials ID for GitHub token.
+* @param prNumber Pull Request number.
+* @param marker Unique marker string to identify warning comments.
+* @param bufferHours Buffer period in hours to wait after the last warning comment.
+* @return true if PR was closed, false otherwise.
+*/
+def closePROnBuffer(script, githubRepo, tokenId, prNumber, marker, bufferHours) {
+    def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
+    return github.closePROnBuffer(prNumber, marker, bufferHours)
+}

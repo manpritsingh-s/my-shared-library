@@ -230,4 +230,58 @@ class GitHubManager implements Serializable {
         script.echo "Delete branch API response: ${response}"
         return response
     }
+
+    /**
+     * Posts a warning comment to a PR only if one does not already exist, and returns the timestamp of the latest warning comment.
+     *
+     * @param prNumber Pull Request number.
+     * @param message The warning message to post (should include a unique marker).
+     * @param marker Unique marker string to identify warning comments.
+     * @return The timestamp of the latest warning comment (if any), or null.
+     */
+    def postWarningIfNeeded(prNumber, message, marker) {
+        def token = getGitHubToken()
+        def comments = GitHubHelpers.fetchPRComments(script, repo, token, prNumber)
+        def latest = GitHubHelpers.findLatestWarningComment(comments, marker)
+        if (latest) {
+            script.echo "Warning comment already exists for PR #${prNumber} at ${latest.created_at}"
+            return latest.created_at
+        }
+        commentOnPR(prNumber, message)
+        script.echo "Posted new warning comment for PR #${prNumber}"
+        // Fetch again to get the timestamp of the new comment
+        comments = GitHubHelpers.fetchPRComments(script, repo, token, prNumber)
+        latest = GitHubHelpers.findLatestWarningComment(comments, marker)
+        return latest?.created_at
+    }
+
+    /**
+     * Closes a PR only if the buffer period has elapsed since the last warning comment.
+     *
+     * @param prNumber Pull Request number.
+     * @param marker Unique marker string to identify warning comments.
+     * @param bufferHours Buffer period in hours to wait after the last warning comment.
+     * @return true if PR was closed, false otherwise.
+     */
+    def closePROnBuffer(prNumber, marker, bufferHours) {
+        def token = getGitHubToken()
+        def comments = GitHubHelpers.fetchPRComments(script, repo, token, prNumber)
+        def latest = GitHubHelpers.findLatestWarningComment(comments, marker)
+        if (!latest) {
+            script.echo "No warning comment found for PR #${prNumber}. Not closing."
+            return false
+        }
+        def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+        def lastWarning = sdf.parse(latest.created_at)
+        def now = new Date()
+        def diffHours = (now.time - lastWarning.time) / (1000 * 60 * 60)
+        if (diffHours < bufferHours) {
+            script.echo "Buffer period not elapsed for PR #${prNumber}: ${diffHours}h < ${bufferHours}h"
+            return false
+        }
+        closePullRequest(prNumber)
+        script.echo "Closed PR #${prNumber} after buffer period."
+        return true
+    }
 }

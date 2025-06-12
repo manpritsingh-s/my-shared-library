@@ -88,6 +88,52 @@ class GitHubHelpers implements Serializable {
     }
 
     /**
+     * Fetches all comments for a pull request.
+     *
+     * @param script Jenkins pipeline script context.
+     * @param repo GitHub repository in owner/repo format.
+     * @param token GitHub API token.
+     * @param prNumber Pull request number.
+     * @return List of comments (each as a map), or empty list if none/error.
+     */
+    static def fetchPRComments(script, repo, token, prNumber) {
+        def url = "https://api.github.com/repos/${repo}/issues/${prNumber}/comments?per_page=100"
+        def response = script.bat(
+            script: """curl -L -s -H \"Authorization: Bearer ${token}\" -H \"Accept: application/vnd.github+json\" \"${url}\" """,
+            returnStdout: true
+        ).trim()
+        def jsonStart = response.indexOf('[')
+        if (jsonStart > 0) {
+            response = response.substring(jsonStart)
+        }
+        if (!response?.startsWith("[")) {
+            script.echo "ERROR: PR comments response is not valid JSON: ${response}"
+            return []
+        }
+        try {
+            return script.readJSON(text: response)
+        } catch (Exception e) {
+            script.echo "Failed to parse PR comments JSON: ${e.message}"
+            return []
+        }
+    }
+
+    /**
+     * Finds the latest warning comment (with a unique marker) and its timestamp.
+     *
+     * @param comments List of PR comments (as returned by fetchPRComments).
+     * @param marker Unique marker string to identify warning comments.
+     * @return Map with keys 'comment' (the comment map) and 'created_at' (timestamp), or null if not found.
+     */
+    static def findLatestWarningComment(comments, marker) {
+        if (!comments) return null
+        def warningComments = comments.findAll { it.body?.contains(marker) }
+        if (!warningComments) return null
+        def latest = warningComments.max { it.created_at }
+        return [comment: latest, created_at: latest.created_at]
+    }
+
+    /**
     * Escapes double quotes in a JSON payload for Windows command line compatibility.
     *
     * @param payload JSON string to escape.
