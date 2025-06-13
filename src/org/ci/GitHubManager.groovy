@@ -66,7 +66,46 @@ class GitHubManager implements Serializable {
     * @param days, Number of days to filter by.
     * @return List of filtered pull requests.
     */
-def filterPullRequests(prs, minutes) {
+// def filterPullRequests(prs, days) {
+//     if (!prs) {
+//         script.echo "No PRs provided to filter."
+//         return []
+//     }
+//     def now = new Date()
+//     script.echo "Filtering PRs older than ${days} days"
+//     def filtered = prs.findAll { pr ->
+//         try {
+//             if (!pr || !pr.created_at) {
+//                 script.echo "Skipping item without created_at: ${pr}"
+//                 return false
+//             }
+//             script.echo "Checking PR #${pr.number} created at ${pr.created_at}"
+//             def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+//             sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+//             def dateToCheck = pr.updated_at ?: pr.created_at
+//             def updatedAt = sdf.parse(dateToCheck)
+//             def diff = (now.time - updatedAt.time) / (1000 * 60 * 60 * 24)
+//             script.echo "PR #${pr.number} is ${diff} days old"
+//             return diff >= days
+//         } catch (Exception e) {
+//             script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
+//             return false
+//         }
+//     }
+//     return filtered ?: []
+// }
+
+
+// In GitHubManager.groovy
+
+/**
+ * Filters pull requests older than the specified number of minutes.
+ *
+ * @param prs List of pull requests.
+ * @param minutes Number of minutes to filter by.
+ * @return List of filtered pull requests.
+ */
+def filterPullRequestsByMinutes(prs, minutes) {
     if (!prs) {
         script.echo "No PRs provided to filter."
         return []
@@ -79,7 +118,6 @@ def filterPullRequests(prs, minutes) {
                 script.echo "Skipping item without created_at: ${pr}"
                 return false
             }
-            script.echo "Checking PR #${pr.number} created at ${pr.created_at}"
             def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
             sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
             def dateToCheck = pr.updated_at ?: pr.created_at
