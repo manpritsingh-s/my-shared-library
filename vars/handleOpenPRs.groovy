@@ -162,7 +162,7 @@ def postWarningIfNeeded(script, githubRepo, tokenId, prNumber, message, marker) 
 */
 def closePROnBuffer(script, githubRepo, tokenId, prNumber, warningMarker, bufferMinutes) {
     def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
-    return github.closePROnBuffer(script, githubRepo, tokenId, prNumber, warningMarker, bufferMinutes)
+    return github.closePROnBuffer(prNumber, warningMarker, bufferMinutes)
 }
 
 /**
