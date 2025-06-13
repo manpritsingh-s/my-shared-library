@@ -37,7 +37,7 @@ def getPullRequests(script, githubRepo, tokenId) {
 
 def filterPullRequestsByMinutes(script, prs, minutes) {
     def github = new org.ci.GitHubManager(script, script.env.GITHUB_REPO, script.env.TOKEN_ID)
-    def filtered = github.filterPullRequests(prs, minutes)
+    def filtered = github.filterPullRequestsByMinutes(prs, minutes)
     if (!filtered || filtered.isEmpty()) {
         script.echo "No pull requests found matching the filter (older than ${minutes} minutes)."
         return [message: "No PRs found", prs: []]
