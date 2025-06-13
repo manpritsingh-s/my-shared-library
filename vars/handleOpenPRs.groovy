@@ -19,14 +19,30 @@ def getPullRequests(script, githubRepo, tokenId) {
 * @param days, The number of days to filter by.
 * @return List of filtered pull requests.
 */
-def filterPullRequests(script, prs, days) {
-    def github = new org.ci.GitHubManager(script, script.env.GITHUB_REPO, script.env.TOKEN_ID)
-    return github.filterPullRequests(prs, days)
-}
+// def filterPullRequests(script, prs, days) {
+//     def github = new org.ci.GitHubManager(script, script.env.GITHUB_REPO, script.env.TOKEN_ID)
+//     return github.filterPullRequests(prs, days)
+// }
+
+// def filterPullRequests(script, prs, days) {
+//     def github = new org.ci.GitHubManager(script, script.env.GITHUB_REPO, script.env.TOKEN_ID)
+//     def filtered = github.filterPullRequests(prs, days)
+//     if (!filtered || filtered.isEmpty()) {
+//         script.echo "No pull requests found matching the filter (older than ${days} days)."
+//         return [message: "No PRs found", prs: []]
+//     }
+//     return [message: "PRs found", prs: filtered]
+// }
+
 
 def filterPullRequestsByMinutes(script, prs, minutes) {
     def github = new org.ci.GitHubManager(script, script.env.GITHUB_REPO, script.env.TOKEN_ID)
-    return github.filterPullRequestsByMinutes(prs, minutes)
+    def filtered = github.filterPullRequests(prs, minutes)
+    if (!filtered || filtered.isEmpty()) {
+        script.echo "No pull requests found matching the filter (older than ${minutes} minutes)."
+        return [message: "No PRs found", prs: []]
+    }
+    return [message: "PRs found", prs: filtered]
 }
 
 /*

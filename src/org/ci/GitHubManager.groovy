@@ -96,9 +96,7 @@ class GitHubManager implements Serializable {
 // }
 
 
-// In GitHubManager.groovy
-
-/**
+/** --------------This I created only for testing purpose--------------------
  * Filters pull requests older than the specified number of minutes.
  *
  * @param prs List of pull requests.
@@ -329,7 +327,7 @@ def filterPullRequestsByMinutes(prs, minutes) {
     //     return true
     // }
 
-    /**
+    /** --------Only for testing------------
      * Closes a PR only if the buffer period has elapsed since the last warning comment.
      *
      * @param prNumber Pull Request number.
