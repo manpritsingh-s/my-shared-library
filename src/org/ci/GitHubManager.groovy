@@ -269,9 +269,6 @@ def filterPullRequestsByMinutes(prs, minutes) {
             script: curlCommand,
             returnStdout: true
         ).trim()
-        if (!response) {
-        response = "Branch '${branchName}' deleted (API returned no content)."
-        }
         script.echo "Delete branch API response: ${response}"
         return response
     }
