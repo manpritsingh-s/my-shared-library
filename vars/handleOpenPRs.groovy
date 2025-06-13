@@ -209,3 +209,17 @@ def getLatestWarningCommentTimestamp(script, githubRepo, tokenId, prNumber, warn
     def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
     return github.getLatestWarningCommentTimestamp(script, githubRepo, tokenId, prNumber, warningMarker)
 }
+
+/**
+* Filter PRs by label.
+*
+* @param prs List of PRs.
+* @param label Label to filter by.
+* @return List of PRs that have the label.
+*/
+def filterPRsByLabel(prs, label) {
+    if (!prs) return []
+    return prs.findAll { pr ->
+        pr.labels && pr.labels.any { it.name == label }
+    }
+}
