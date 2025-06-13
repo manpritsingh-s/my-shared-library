@@ -66,13 +66,13 @@ class GitHubManager implements Serializable {
     * @param days, Number of days to filter by.
     * @return List of filtered pull requests.
     */
-def filterPullRequests(prs, days) {
+def filterPullRequests(prs, minutes) {
     if (!prs) {
         script.echo "No PRs provided to filter."
         return []
     }
     def now = new Date()
-    script.echo "Filtering PRs older than ${days} days"
+    script.echo "Filtering PRs older than ${minutes} minutes"
     def filtered = prs.findAll { pr ->
         try {
             if (!pr || !pr.created_at) {
@@ -84,9 +84,9 @@ def filterPullRequests(prs, days) {
             sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
             def dateToCheck = pr.updated_at ?: pr.created_at
             def updatedAt = sdf.parse(dateToCheck)
-            def diff = (now.time - updatedAt.time) / (1000 * 60 * 60 * 24)
-            script.echo "PR #${pr.number} is ${diff} days old"
-            return diff >= days
+            def diffMinutes = (now.time - updatedAt.time) / (1000 * 60)
+            script.echo "PR #${pr.number} is ${diffMinutes} minutes old"
+            return diffMinutes >= minutes
         } catch (Exception e) {
             script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
             return false

@@ -19,9 +19,9 @@ def getPullRequests(script, githubRepo, tokenId) {
 * @param days, The number of days to filter by.
 * @return List of filtered pull requests.
 */
-def filterPullRequests(script, prs, days) {
+def filterPullRequests(script, prs, minutes) {
     def github = new org.ci.GitHubManager(script, script.env.GITHUB_REPO, script.env.TOKEN_ID)
-    return github.filterPullRequests(prs, days)
+    return github.filterPullRequests(prs, minutes)
 }
 
 /*
