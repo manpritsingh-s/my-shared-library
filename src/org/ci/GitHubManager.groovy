@@ -308,7 +308,7 @@ def filterPullRequests(prs, days) {
         def now = new Date()
         def diffMinutes = (now.time - lastWarningTime.time) / (1000 * 60)
         script.echo "Buffer diff: ${diffMinutes} minutes (buffer: ${bufferMinutes})"
-        if (diffMinutes >= bufferMinutes) {
+        if (diffMinutes > bufferMinutes) {
             script.echo "Buffer elapsed, closing PR #${prNumber}"
             closePullRequest(prNumber)
             return true
