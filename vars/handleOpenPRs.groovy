@@ -160,9 +160,9 @@ def postWarningIfNeeded(script, githubRepo, tokenId, prNumber, message, marker) 
 * @param bufferMinutes Buffer period in minutes to wait after the last warning comment.
 * @return true if PR was closed, false otherwise.
 */
-def closePROnBuffer(script, githubRepo, tokenId, prNumber, marker, bufferMinutes) {
+def closePROnBuffer(script, githubRepo, tokenId, prNumber, warningMarker, bufferMinutes) {
     def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
-    return github.closePROnBuffer(script, githubRepo, tokenId, prNumber, marker, bufferMinutes)
+    return github.closePROnBuffer(script, githubRepo, tokenId, prNumber, warningMarker, bufferMinutes)
 }
 
 /**
@@ -186,10 +186,10 @@ def getPRComments(script, githubRepo, tokenId, prNumber) {
 * @param githubRepo GitHub repository in owner/repo format.
 * @param tokenId Jenkins credentials ID for GitHub token.
 * @param prNumber Pull Request number.
-* @param marker Unique marker string to identify warning comments.
+* @param warningMarker Unique marker string to identify warning comments.
 * @return Date of latest warning comment, or null.
 */
-def getLatestWarningCommentTimestamp(script, githubRepo, tokenId, prNumber, marker) {
+def getLatestWarningCommentTimestamp(script, githubRepo, tokenId, prNumber, warningMarker) {
     def github = new org.ci.GitHubManager(script, githubRepo, tokenId)
-    return github.getLatestWarningCommentTimestamp(script, githubRepo, tokenId, prNumber, marker)
+    return github.getLatestWarningCommentTimestamp(script, githubRepo, tokenId, prNumber, warningMarker)
 }
