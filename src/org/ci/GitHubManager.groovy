@@ -132,6 +132,17 @@ def filterPullRequestsByMinutes(prs, minutes) {
     return filtered ?: []
 }
 
+def filterOldLabeledPullRequests(prs, minutes, labelName) {
+    def now = new Date()
+    return prs.findAll { pr ->
+        def hasLabel = pr.labels?.any { it.name == labelName }
+        def updatedAt = pr.updated_at ?: pr.created_at
+        def prDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", updatedAt)
+        def diffMinutes = ((now.time - prDate.time) / (1000 * 60)) as int
+        return hasLabel && diffMinutes >= minutes
+    }
+}
+
     /*
     * Add labels to a pull request.
     *

@@ -223,3 +223,9 @@ def filterPRsByLabel(prs, label) {
         pr.labels && pr.labels.any { it.name == label }
     }
 }
+
+def filterOldLabeledPullRequests(context, repo, token, minutes, labelName) {
+    def allPRs = getPullRequests(context, repo, token)
+    def manager = new org.ci.GitHubManager()
+    return manager.filterOldLabeledPullRequests(allPRs, minutes, labelName)
+}
