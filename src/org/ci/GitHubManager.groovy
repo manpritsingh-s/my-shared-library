@@ -60,88 +60,41 @@ class GitHubManager implements Serializable {
     }
 
     /**
-    * Filters pull requests older than the specified number of days.
-    *
-    * @param prs, List of pull requests.
-    * @param days, Number of days to filter by.
-    * @return List of filtered pull requests.
-    */
-// def filterPullRequests(prs, days) {
-//     if (!prs) {
-//         script.echo "No PRs provided to filter."
-//         return []
-//     }
-//     def now = new Date()
-//     script.echo "Filtering PRs older than ${days} days"
-//     def filtered = prs.findAll { pr ->
-//         try {
-//             if (!pr || !pr.created_at) {
-//                 script.echo "Skipping item without created_at: ${pr}"
-//                 return false
-//             }
-//             script.echo "Checking PR #${pr.number} created at ${pr.created_at}"
-//             def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-//             sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
-//             def dateToCheck = pr.updated_at ?: pr.created_at
-//             def updatedAt = sdf.parse(dateToCheck)
-//             def diff = (now.time - updatedAt.time) / (1000 * 60 * 60 * 24)
-//             script.echo "PR #${pr.number} is ${diff} days old"
-//             return diff >= days
-//         } catch (Exception e) {
-//             script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
-//             return false
-//         }
-//     }
-//     return filtered ?: []
-// }
-
-
-/** --------------This I created only for testing purpose--------------------
- * Filters pull requests older than the specified number of minutes.
- *
- * @param prs List of pull requests.
- * @param minutes Number of minutes to filter by.
- * @return List of filtered pull requests.
- */
-def filterPullRequestsByMinutes(prs, minutes) {
-    if (!prs) {
-        script.echo "No PRs provided to filter."
-        return []
-    }
-    def now = new Date()
-    script.echo "Filtering PRs older than ${minutes} minutes and with NO labels"
-    def filtered = prs.findAll { pr ->
-        try {
-            if (!pr || !pr.created_at) {
-                script.echo "Skipping item without created_at: ${pr}"
-                return false
-            }
-            def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-            sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
-            def dateToCheck = pr.updated_at ?: pr.created_at
-            def updatedAt = sdf.parse(dateToCheck)
-            def diffMinutes = (now.time - updatedAt.time) / (1000 * 60)
-            def hasAnyLabel = pr.labels && pr.labels.size() > 0
-            script.echo "PR #${pr.number} is ${diffMinutes} minutes old, labels: ${pr.labels*.name}"
-            return diffMinutes >= minutes && !hasAnyLabel
-        } catch (Exception e) {
-            script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
-            return false
+     * Unified filter for PRs by age (minutes), label presence, and unlabeled/labeled only.
+     * Pass options as a map: [minMinutes: 10, label: 'very-old-pr', unlabeledOnly: true, labeledOnly: false]
+     */
+    def filterPullRequests(prs, Map opts = [:]) {
+        if (!prs) {
+            script.echo "No PRs provided to filter."
+            return []
         }
-    }
-    return filtered ?: []
-}
-
-static def filterOldLabeledPullRequests(prs, minutes, labelName) {
         def now = new Date()
+        def minMinutes = opts.get('minMinutes', null)
+        def label = opts.get('label', null)
+        def unlabeledOnly = opts.get('unlabeledOnly', false)
+        def labeledOnly = opts.get('labeledOnly', false)
+
         def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+
         return prs.findAll { pr ->
-            def hasLabel = pr.labels?.any { it.name == labelName }
-            def updatedAt = pr.updated_at ?: pr.created_at
-            def prDate = sdf.parse(updatedAt)
-            def diffMinutes = ((now.time - prDate.time) / (1000 * 60)) as int
-            return hasLabel && diffMinutes >= minutes
+            try {
+                if (!pr || !pr.created_at) return false
+                def dateToCheck = pr.updated_at ?: pr.created_at
+                def updatedAt = sdf.parse(dateToCheck)
+                def diffMinutes = (now.time - updatedAt.time) / (1000 * 60)
+                def hasAnyLabel = pr.labels && pr.labels.size() > 0
+                def hasLabel = label ? (pr.labels?.any { it.name == label }) : true
+
+                if (minMinutes && diffMinutes < minMinutes) return false
+                if (label && !hasLabel) return false
+                if (unlabeledOnly && hasAnyLabel) return false
+                if (labeledOnly && !hasAnyLabel) return false
+                return true
+            } catch (Exception e) {
+                script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
+                return false
+            }
         }
     }
 
@@ -156,22 +109,18 @@ static def filterOldLabeledPullRequests(prs, minutes, labelName) {
         def token = getGitHubToken()
         def payload = script.writeJSON(returnText: true, json: [labels: labels])
         def safePayload = GitHubHelpers.safeJsonForWindows(payload)
-
         def curlCommand = """curl -L ^
             -H "Accept: application/vnd.github+json" ^
             -H "Authorization: Bearer ${token}" ^
             -H "X-GitHub-Api-Version: 2022-11-28" ^
             https://api.github.com/repos/${repo}/issues/${prNumber}/labels ^
             -d "${safePayload}" """
-
         script.echo "Making request to GitHub API to add labels..."
         script.echo "Payload: ${payload}"
-
         def response = script.bat(
             script: curlCommand,
             returnStdout: true
         ).trim()
-
         script.echo "GitHub API Response: ${response}"
         return response
     }
@@ -192,22 +141,18 @@ static def filterOldLabeledPullRequests(prs, minutes, labelName) {
             description: description
         ])
         def safePayload = GitHubHelpers.safeJsonForWindows(payload)
-
         def curlCommand = """curl -L ^
             -H "Accept: application/vnd.github+json" ^
             -H "Authorization: Bearer ${token}" ^
             -H "X-GitHub-Api-Version: 2022-11-28" ^
             https://api.github.com/repos/${repo}/labels ^
             -d "${safePayload}" """
-
         script.echo "Creating label '${labelName}' if it does not exist..."
         script.echo "Payload: ${payload}"
-
         def response = script.bat(
             script: curlCommand,
             returnStdout: true
         ).trim()
-
         script.echo "GitHub API Response: ${response}"
         return response
     }
@@ -310,38 +255,7 @@ static def filterOldLabeledPullRequests(prs, minutes, labelName) {
         latest = GitHubHelpers.findLatestWarningComment(comments, marker)
         return latest?.created_at
     }
-
     /**
-     * Closes a PR only if the buffer period has elapsed since the last warning comment.
-     *
-     * @param prNumber Pull Request number.
-     * @param marker Unique marker string to identify warning comments.
-     * @param bufferHours Buffer period in hours to wait after the last warning comment.
-     * @return true if PR was closed, false otherwise.
-     */
-    // def closePROnBuffer(prNumber, marker, bufferHours) {
-    //     def token = getGitHubToken()
-    //     def comments = GitHubHelpers.fetchPRComments(script, repo, token, prNumber)
-    //     def latest = GitHubHelpers.findLatestWarningComment(comments, marker)
-    //     if (!latest) {
-    //         script.echo "No warning comment found for PR #${prNumber}. Not closing."
-    //         return false
-    //     }
-    //     def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-    //     sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
-    //     def lastWarning = sdf.parse(latest.created_at)
-    //     def now = new Date()
-    //     def diffHours = (now.time - lastWarning.time) / (1000 * 60 * 60)
-    //     if (diffHours < bufferHours) {
-    //         script.echo "Buffer period not elapsed for PR #${prNumber}: ${diffHours}h < ${bufferHours}h"
-    //         return false
-    //     }
-    //     closePullRequest(prNumber)
-    //     script.echo "Closed PR #${prNumber} after buffer period."
-    //     return true
-    // }
-
-    /** --------Only for testing------------
      * Closes a PR only if the buffer period has elapsed since the last warning comment.
      *
      * @param prNumber Pull Request number.

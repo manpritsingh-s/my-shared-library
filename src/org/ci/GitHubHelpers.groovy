@@ -31,12 +31,12 @@ class GitHubHelpers implements Serializable {
      * @return List of pull requests extracted from the response.
      */
     static def extractPullRequestsFromApiResponse(script, response) {
-        script.echo "raw response content: ${response}"
+        // script.echo "raw response content: ${response}"
         def jsonStart = response.indexOf('[')
         if (jsonStart > 0) {
             response = response.substring(jsonStart)
         }
-        script.echo "Cleaned response content: ${response}"
+        // script.echo "Cleaned response content: ${response}"
         if (!response.startsWith("[")) {
             script.echo "ERROR: Response is not valid JSON"
             return []
@@ -71,7 +71,7 @@ class GitHubHelpers implements Serializable {
         if (jsonStart > 0) {
             response = response.substring(jsonStart)
         }
-        script.echo "Cleaned PR details response: ${response}"
+        // script.echo "Cleaned PR details response: ${response}"
         if (!response?.startsWith("{")) {
             script.echo "ERROR: Response is not valid JSON: ${response}"
             return null
