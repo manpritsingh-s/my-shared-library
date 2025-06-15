@@ -109,7 +109,7 @@ def filterPullRequestsByMinutes(prs, minutes) {
         return []
     }
     def now = new Date()
-    script.echo "Filtering PRs older than ${minutes} minutes"
+    script.echo "Filtering PRs older than ${minutes} minutes and with NO labels"
     def filtered = prs.findAll { pr ->
         try {
             if (!pr || !pr.created_at) {
@@ -121,8 +121,9 @@ def filterPullRequestsByMinutes(prs, minutes) {
             def dateToCheck = pr.updated_at ?: pr.created_at
             def updatedAt = sdf.parse(dateToCheck)
             def diffMinutes = (now.time - updatedAt.time) / (1000 * 60)
-            script.echo "PR #${pr.number} is ${diffMinutes} minutes old"
-            return diffMinutes >= minutes
+            def hasAnyLabel = pr.labels && pr.labels.size() > 0
+            script.echo "PR #${pr.number} is ${diffMinutes} minutes old, labels: ${pr.labels*.name}"
+            return diffMinutes >= minutes && !hasAnyLabel
         } catch (Exception e) {
             script.echo "Error parsing PR date for ${pr?.number ?: 'unknown'}: ${e.message}"
             return false
