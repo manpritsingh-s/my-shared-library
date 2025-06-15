@@ -134,10 +134,12 @@ def filterPullRequestsByMinutes(prs, minutes) {
 
 static def filterOldLabeledPullRequests(prs, minutes, labelName) {
         def now = new Date()
+        def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
         return prs.findAll { pr ->
             def hasLabel = pr.labels?.any { it.name == labelName }
             def updatedAt = pr.updated_at ?: pr.created_at
-            def prDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss'Z'", updatedAt)
+            def prDate = sdf.parse(updatedAt)
             def diffMinutes = ((now.time - prDate.time) / (1000 * 60)) as int
             return hasLabel && diffMinutes >= minutes
         }
