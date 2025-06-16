@@ -69,9 +69,17 @@ class GitHubManager implements Serializable {
             return []
         }
         def now = new Date()
+
+        // Get the minimum age (in minutes) for filtering PRs, or null if not set
         def minMinutes = opts.get('minMinutes', null)
+
+        // Get the label to filter PRs, or null if not set
         def label = opts.get('label', null)
+
+        //  Check it should include only PRs with no labels (default : false)
         def unlabeledOnly = opts.get('unlabeledOnly', false)
+
+        // Check if the PRs included have at least one label (default : false)
         def labeledOnly = opts.get('labeledOnly', false)
 
         def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")

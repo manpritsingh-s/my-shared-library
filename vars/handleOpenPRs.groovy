@@ -154,4 +154,5 @@ def getPullRequestBranchName(script, repo, tokenId, prNumber) {
 */
 def deleteBranch(script, repo, tokenId, branchName) {
     def manager = new org.ci.GitHubManager(script, repo, tokenId)
-    return
+    return manager.deleteBranch(branchName)
+}
